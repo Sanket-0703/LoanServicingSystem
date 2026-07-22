@@ -1,4 +1,5 @@
-using Loan_Servicing_System.Components;
+using System.Data;
+using Microsoft.Data.SqlClient;
 
 namespace Loan_Servicing_System
 {
@@ -12,6 +13,22 @@ namespace Loan_Servicing_System
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
+            // Adding Razor Pages and Blazor Server services
+            builder.Services.AddRazorPages();
+            builder.Services.AddServerSideBlazor();
+
+            // DB Coonection
+            builder.Services.AddScoped<IDbConnection>(sp =>
+            {
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                var connectionString = configuration.GetConnectionString("DefaultConnection")
+                                       ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+                return new SqlConnection(connectionString);
+            });
+
+            builder.Services.AddAuthentication();
+            builder.Services.AddAuthorization();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -23,11 +40,17 @@ namespace Loan_Servicing_System
             }
 
             app.UseHttpsRedirection();
-
             app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseAntiforgery();
 
-            app.MapRazorComponents<App>()
+            // Map your root component (standard for modern Blazor templates)
+            app.MapRazorComponents<Loan_Servicing_System.Components.App>()
                 .AddInteractiveServerRenderMode();
 
             app.Run();
