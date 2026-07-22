@@ -1,0 +1,120 @@
+﻿@page "/customers"
+@layout MainLayout
+
+<PageTitle>Customer Directory - Loan Servicing System</PageTitle>
+
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-800">Customer Directory</h2>
+        <p class="text-sm text-slate-500 mt-1">Manage borrower profiles, view KYC status, and access customer details.</p>
+    </div>
+    <a href="/customers/new" class="inline-flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
+        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        Add Customer
+    </a>
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row gap-4">
+    <div class="flex-1 relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <input type="text" @bind="SearchQuery" @bind:event="oninput" class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition" placeholder="Search by name, email, or ID..." />
+    </div>
+
+    <div class="flex gap-4">
+        <select class="block w-full pl-3 pr-10 py-2 text-base border border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg bg-slate-50">
+            <option>All KYC Statuses</option>
+            <option>Verified</option>
+            <option>Pending</option>
+            <option>Rejected</option>
+        </select>
+    </div>
+</div>
+
+<!-- Data Grid -->
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact Info</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Loans</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">KYC Status</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-slate-200">
+                @foreach (var customer in FilteredCustomers)
+                {
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                                    @customer.Name.Substring(0, 1)
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-slate-900">@customer.Name</div>
+                                    <div class="text-xs text-slate-500">ID: @customer.CustomerId</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-slate-900">@customer.Phone</div>
+                            <div class="text-xs text-slate-500">@customer.Email</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-slate-900">@customer.ActiveLoansCount</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full @GetKycBadgeClass(customer.KycStatus)">
+                                @customer.KycStatus
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="/customers/@customer.Id" class="text-indigo-600 hover:text-indigo-900 mr-3">View Profile</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private string SearchQuery { get; set; } = string.Empty;
+
+    private List<CustomerModel> Customers = new()
+    {
+        new CustomerModel { Id = 1, CustomerId = "CUST-8273", Name = "Aarav Patel", Email = "aarav.p@example.com", Phone = "+91 98765 43210", ActiveLoansCount = 1, KycStatus = "Verified" },
+        new CustomerModel { Id = 2, CustomerId = "CUST-9124", Name = "Meera Reddy", Email = "meera.reddy@example.com", Phone = "+91 87654 32109", ActiveLoansCount = 0, KycStatus = "Pending" },
+        new CustomerModel { Id = 3, CustomerId = "CUST-3341", Name = "Vikram Singh", Email = "vsingh99@example.com", Phone = "+91 76543 21098", ActiveLoansCount = 2, KycStatus = "Verified" }
+    };
+
+    private IEnumerable<CustomerModel> FilteredCustomers =>
+        string.IsNullOrWhiteSpace(SearchQuery)
+            ? Customers
+            : Customers.Where(c => c.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                                   c.CustomerId.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase));
+
+    private string GetKycBadgeClass(string status) => status switch
+    {
+        "Verified" => "bg-emerald-100 text-emerald-800",
+        "Pending" => "bg-amber-100 text-amber-800",
+        "Rejected" => "bg-red-100 text-red-800",
+        _ => "bg-slate-100 text-slate-800"
+    };
+
+    private class CustomerModel
+    {
+        public int Id { get; set; }
+        public string CustomerId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty; // Fixed colon to semicolon here
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public int ActiveLoansCount { get; set; }
+        public string KycStatus { get; set; } = string.Empty;
+    }
+}

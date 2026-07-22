@@ -1,0 +1,91 @@
+﻿@page "/loan-products"
+@layout MainLayout
+@* @attribute [Authorize(Roles = "Admin")] *@
+
+<PageTitle>Loan Products Configuration - Loan Servicing System</PageTitle>
+
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-800">Loan Products Configuration</h2>
+        <p class="text-sm text-slate-500 mt-1">Define institutional loan templates, interest rate tiers, and processing fees.</p>
+    </div>
+    <button class="inline-flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
+        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        Create Product Template
+    </button>
+</div>
+
+<!-- Products Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <!-- Product Card 1 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition">
+        <div>
+            <div class="flex justify-between items-start mb-4">
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Active</span>
+                <span class="text-xs font-mono text-slate-400">PRD-01</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Personal Loan - Tier 1</h3>
+            <p class="text-xs text-slate-500 mb-4">Unsecured general-purpose consumer lending facility.</p>
+
+            <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
+                <div class="flex justify-between"><span class="text-slate-500">Interest Rate:</span> <span class="font-bold text-slate-900">12.5% / yr</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Max Tenure:</span> <span class="font-bold text-slate-900">36 Months</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Processing Fee:</span> <span class="font-bold text-slate-900">1.0%</span></div>
+            </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-2">
+            <button class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">Configure</button>
+        </div>
+    </div>
+
+    <!-- Product Card 2 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition">
+        <div>
+            <div class="flex justify-between items-start mb-4">
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Active</span>
+                <span class="text-xs font-mono text-slate-400">PRD-02</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Vehicle Loan (Used)</h3>
+            <p class="text-xs text-slate-500 mb-4">Secured lending facility for pre-owned automobiles.</p>
+
+            <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
+                <div class="flex justify-between"><span class="text-slate-500">Interest Rate:</span> <span class="font-bold text-slate-900">9.5% / yr</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Max Tenure:</span> <span class="font-bold text-slate-900">48 Months</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Processing Fee:</span> <span class="font-bold text-slate-900">1.5%</span></div>
+            </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-2">
+            <button class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">Configure</button>
+        </div>
+    </div>
+
+    <!-- Product Card 3 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition">
+        <div>
+            <div class="flex justify-between items-start mb-4">
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Draft</span>
+                <span class="text-xs font-mono text-slate-400">PRD-03</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Micro-Business Advance</h3>
+            <p class="text-xs text-slate-500 mb-4">Short-term working capital financing for small business owners.</p>
+
+            <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
+                <div class="flex justify-between"><span class="text-slate-500">Interest Rate:</span> <span class="font-bold text-slate-900">15.0% / yr</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Max Tenure:</span> <span class="font-bold text-slate-900">12 Months</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Processing Fee:</span> <span class="font-bold text-slate-900">2.0%</span></div>
+            </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-2">
+            <button class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">Configure</button>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    // Loan products configuration logic placeholder
+}

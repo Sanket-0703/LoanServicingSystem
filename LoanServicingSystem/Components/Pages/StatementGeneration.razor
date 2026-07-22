@@ -1,0 +1,125 @@
+﻿@page "/statements"
+@layout MainLayout
+
+<PageTitle>Statement Generation - Loan Servicing System</PageTitle>
+
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-slate-800">Statement Generation</h2>
+    <p class="text-sm text-slate-500 mt-1">Generate and export official account statements for borrower verification and audit records.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Statement Parameters Form -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+        <h3 class="font-bold text-slate-800 text-lg pb-2 border-b border-slate-100">Statement Criteria</h3>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Select Loan Account</label>
+            <select class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
+                <option value="">LN-2026-001 (Aarav Patel)</option>
+                <option value="">LN-2026-002 (Meera Reddy)</option>
+                <option value="">LN-2026-003 (Vikram Singh)</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Statement Type</label>
+            <select class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
+                <option>Full Account Ledger Statement</option>
+                <option>Interest Certificate (Tax)</option>
+                <option>NOC (No Dues Certificate)</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                <input type="date" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                <input type="date" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition" />
+            </div>
+        </div>
+
+        <div class="pt-4">
+            <button class="w-full py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
+                Preview Statement
+            </button>
+        </div>
+    </div>
+
+    <!-- Statement Preview Canvas -->
+    <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col justify-between">
+        <div>
+            <div class="flex justify-between items-start pb-6 border-b border-slate-200">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">LOAN SERVICING SYSTEM</h2>
+                    <p class="text-xs text-slate-500">Official Account Statement & Ledger Summary</p>
+                </div>
+                <div class="text-right">
+                    <span class="px-3 py-1 bg-slate-100 text-slate-700 font-mono text-xs rounded-full font-semibold">STMT-2026-9921</span>
+                    <p class="text-xs text-slate-400 mt-1">Generated: Jul 23, 2026</p>
+                </div>
+            </div>
+
+            <div class="py-6 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-slate-400 block text-xs uppercase tracking-wider">Borrower Details</span>
+                    <strong class="text-slate-900">Aarav Patel</strong>
+                    <p class="text-slate-600 text-xs">CUST-8273 &bull; aarav.p@example.com</p>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-xs uppercase tracking-wider">Account Terms</span>
+                    <strong class="text-slate-900">LN-2026-001 (Personal Tier 1)</strong>
+                    <p class="text-slate-600 text-xs">Principal: $15,000 &bull; Rate: 12.5%</p>
+                </div>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl overflow-hidden mb-6">
+                <table class="min-w-full divide-y divide-slate-200 text-xs">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold text-slate-500">Date</th>
+                            <th class="px-4 py-2 text-left font-semibold text-slate-500">Particulars</th>
+                            <th class="px-4 py-2 text-right font-semibold text-slate-500">Debit</th>
+                            <th class="px-4 py-2 text-right font-semibold text-slate-500">Credit</th>
+                            <th class="px-4 py-2 text-right font-semibold text-slate-500">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <tr>
+                            <td class="px-4 py-2 text-slate-500">May 05, 2026</td>
+                            <td class="px-4 py-2 font-medium">Principal Disbursement</td>
+                            <td class="px-4 py-2 text-right">$15,000.00</td>
+                            <td class="px-4 py-2 text-right text-slate-400">-</td>
+                            <td class="px-4 py-2 text-right font-medium">$15,000.00</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 text-slate-500">Jun 04, 2026</td>
+                            <td class="px-4 py-2 font-medium">EMI Payment Received</td>
+                            <td class="px-4 py-2 text-right text-slate-400">-</td>
+                            <td class="px-4 py-2 text-right text-emerald-600">$485.20</td>
+                            <td class="px-4 py-2 text-right font-medium">$14,514.80</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <button class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition">
+                Export CSV
+            </button>
+            <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
+                Download Official PDF
+            </button>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    // Statement logic placeholder
+}

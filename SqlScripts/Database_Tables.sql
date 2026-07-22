@@ -1,0 +1,169 @@
+CREATE DATABASE LoanServicingSystem;
+GO
+
+USE LoanServicingSystem;
+GO
+
+-- 1. Roles Table
+CREATE TABLE Roles (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    RoleName NVARCHAR(50) NOT NULL UNIQUE,
+    UpdatedBy NVARCHAR(100)
+);
+
+-- 2. Users Table
+CREATE TABLE Users (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    RoleId UNIQUEIDENTIFIER NOT NULL,
+    Username NVARCHAR(100) NOT NULL UNIQUE,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    Email NVARCHAR(100) NOT NULL,
+    IsActive BIT DEFAULT 1,
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (RoleId) REFERENCES Roles(Id)
+);
+
+-- 3. Customers Table
+CREATE TABLE Customers (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    Name NVARCHAR(150) NOT NULL,
+    Email NVARCHAR(100),
+    Phone NVARCHAR(20) NOT NULL,
+    Address NVARCHAR(500),
+    PAN NVARCHAR(10) NOT NULL UNIQUE,
+    Aadhaar NVARCHAR(12) UNIQUE,
+    BusinessName NVARCHAR(150),
+    EmploymentType NVARCHAR(50),
+    Income DECIMAL(18,2),
+    CreditScore INT,
+    UpdatedBy NVARCHAR(100)
+);
+
+-- 4. Loan Products Table
+CREATE TABLE LoanProducts (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    Name NVARCHAR(100) NOT NULL,
+    InterestRate DECIMAL(5,2) NOT NULL,
+    TenureMonths INT NOT NULL,
+    ProcessingFee DECIMAL(18,2) DEFAULT 0,
+    PenaltyRules NVARCHAR(MAX), 
+    UpdatedBy NVARCHAR(100)
+);
+
+-- 5. Loans Table
+CREATE TABLE Loans (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    LoanNumber NVARCHAR(50) NOT NULL UNIQUE,
+    CustomerId UNIQUEIDENTIFIER NOT NULL,
+    ProductId UNIQUEIDENTIFIER NOT NULL,
+    Principal DECIMAL(18,2) NOT NULL,
+    InterestRate DECIMAL(5,2) NOT NULL,
+    Tenure INT NOT NULL,
+    RepaymentFrequency NVARCHAR(20) DEFAULT 'Monthly',
+    StartDate DATE,
+    EndDate DATE,
+    Status NVARCHAR(50) DEFAULT 'Draft', 
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (CustomerId) REFERENCES Customers(Id),
+    FOREIGN KEY (ProductId) REFERENCES LoanProducts(Id)
+);
+
+-- 6. Disbursements Table
+CREATE TABLE Disbursements (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    LoanId UNIQUEIDENTIFIER NOT NULL,
+    Principal DECIMAL(18,2) NOT NULL,
+    BankAccount NVARCHAR(50) NOT NULL,
+    TransactionDate DATETIME2 DEFAULT GETDATE(),
+    ReferenceNumber NVARCHAR(100) NOT NULL,
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (LoanId) REFERENCES Loans(Id)
+);
+
+-- 7. Repayment Schedules Table
+CREATE TABLE RepaymentSchedules (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    LoanId UNIQUEIDENTIFIER NOT NULL,
+    EmiNo INT NOT NULL,
+    DueDate DATE NOT NULL,
+    Principal DECIMAL(18,2) NOT NULL,
+    Interest DECIMAL(18,2) NOT NULL,
+    Outstanding DECIMAL(18,2) NOT NULL,
+    Status NVARCHAR(20) DEFAULT 'Pending', 
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (LoanId) REFERENCES Loans(Id)
+);
+
+-- 8. Payments Table
+CREATE TABLE Payments (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    LoanId UNIQUEIDENTIFIER NOT NULL,
+    PaymentDate DATETIME2 DEFAULT GETDATE(),
+    Amount DECIMAL(18,2) NOT NULL,
+    Mode NVARCHAR(50), 
+    ReferenceNumber NVARCHAR(100),
+    Remarks NVARCHAR(500),
+    PaymentType NVARCHAR(50), 
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (LoanId) REFERENCES Loans(Id)
+);
+
+-- 9. Penalties Table
+CREATE TABLE Penalties (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    LoanId UNIQUEIDENTIFIER NOT NULL,
+    Amount DECIMAL(18,2) NOT NULL,
+    AppliedDate DATETIME2 DEFAULT GETDATE(),
+    Reason NVARCHAR(255),
+    Status NVARCHAR(20) DEFAULT 'Unpaid',
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (LoanId) REFERENCES Loans(Id)
+);
+
+-- 10. Interest Accruals Table
+CREATE TABLE InterestAccruals (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    LoanId UNIQUEIDENTIFIER NOT NULL,
+    Outstanding DECIMAL(18,2) NOT NULL,
+    Interest DECIMAL(18,2) NOT NULL,
+    AccrualDate DATE NOT NULL,
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (LoanId) REFERENCES Loans(Id)
+);
+
+-- 11. Statements Table
+CREATE TABLE Statements (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    LoanId UNIQUEIDENTIFIER NOT NULL,
+    OpeningBalance DECIMAL(18,2),
+    ClosingBalance DECIMAL(18,2),
+    GeneratedDate DATETIME2 DEFAULT GETDATE(),
+    FilePath NVARCHAR(500),
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (LoanId) REFERENCES Loans(Id)
+);
+
+-- 12. Documents Table
+CREATE TABLE Documents (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    CustomerId UNIQUEIDENTIFIER NOT NULL,
+    LoanId UNIQUEIDENTIFIER, 
+    DocumentType NVARCHAR(100) NOT NULL,
+    FilePath NVARCHAR(500) NOT NULL,
+    UploadedAt DATETIME2 DEFAULT GETDATE(),
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (CustomerId) REFERENCES Customers(Id),
+    FOREIGN KEY (LoanId) REFERENCES Loans(Id)
+);
+
+-- 13. Notifications Table
+CREATE TABLE Notifications (
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    UserId UNIQUEIDENTIFIER NOT NULL,
+    Message NVARCHAR(500) NOT NULL,
+    IsRead BIT DEFAULT 0,
+    CreatedAt DATETIME2 DEFAULT GETDATE(),
+    UpdatedBy NVARCHAR(100),
+    FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+GO

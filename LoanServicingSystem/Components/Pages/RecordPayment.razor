@@ -1,0 +1,98 @@
+﻿@page "/loans/{LoanId:int}/payment"
+@layout MainLayout
+
+<PageTitle>Record Payment - Loan Servicing System</PageTitle>
+
+<div class="mb-6 flex items-center justify-between">
+    <div>
+        <div class="flex items-center gap-3">
+            <a href="/loans/@LoanId" class="text-slate-400 hover:text-slate-600 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </a>
+            <h2 class="text-2xl font-bold text-slate-800">Record Payment Transaction</h2>
+        </div>
+        <p class="text-sm text-slate-500 mt-1 ml-8">Process incoming installment collections, adjust penalties, and update the general ledger.</p>
+    </div>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto overflow-hidden">
+
+    <!-- Account Summary Banner -->
+    <div class="bg-slate-50 px-8 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Target Loan Account</span>
+            <div class="text-lg font-bold text-slate-900">LN-2026-001 &bull; Aarav Patel</div>
+        </div>
+        <div class="text-left sm:text-right">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Due Amount</span>
+            <div class="text-lg font-bold text-indigo-600">$485.20</div>
+        </div>
+    </div>
+
+    <!-- Payment Form Fields -->
+    <div class="p-8 space-y-6">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Payment Type</label>
+                <select class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
+                    <option>Standard EMI Installment</option>
+                    <option>Late Penalty Clearance</option>
+                    <option>Lump-Sum Principal Prepayment</option>
+                    <option>Full Account Closure</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Payment Amount ($)</label>
+                <input type="number" step="0.01" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition" placeholder="485.20" />
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Payment Method</label>
+                <select class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
+                    <option>Bank Wire Transfer (NEFT/RTGS)</option>
+                    <option>UPI / Instant Digital Gateway</option>
+                    <option>ACH / Direct Debit</option>
+                    <option>Cash Deposit</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Transaction Reference / UTR #</label>
+                <input type="text" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition" placeholder="e.g. UTR992837410" />
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Staff Notes / Remarks</label>
+            <textarea rows="3" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition" placeholder="Optional notes regarding receipt verification..."></textarea>
+        </div>
+
+        <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-emerald-900 text-sm flex items-start gap-3">
+            <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div>
+                <span class="font-semibold">Ledger Update Notice:</span> Submitting this form will automatically update the running principal balance, post the credit entry to the ledger, and mark the corresponding schedule installment as paid.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Form Actions Footer -->
+    <div class="bg-slate-50 px-8 py-4 border-t border-slate-200 flex justify-between items-center">
+        <a href="/loans/@LoanId" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">
+            Cancel
+        </a>
+        <button type="button" class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition shadow-sm">
+            Confirm & Post Payment
+        </button>
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public int LoanId { get; set; } = 1;
+}
