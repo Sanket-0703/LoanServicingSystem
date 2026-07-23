@@ -1,4 +1,7 @@
-using Loan_Servicing_System.Components;
+using System.Data;
+using CoreData;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Data.SqlClient;
 
 namespace Loan_Servicing_System
 {
@@ -8,9 +11,44 @@ namespace Loan_Servicing_System
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // 1. Add Authentication Services
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.Cookie.Name = "LoanServicingAuth";
+                    options.LoginPath = "/login";
+                    options.LogoutPath = "/logout";
+                    options.AccessDeniedPath = "/unauthorized"; // Matches the tree you provided earlier!
+                    options.ExpireTimeSpan = TimeSpan.FromHours(8); // Expire session after 8 hours
+                });
+
+            // 2. Add Authorization Services
+            builder.Services.AddAuthentication();
+            builder.Services.AddAuthorization();
+
+
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+
+            // Adding Razor Pages and Blazor Server services
+            builder.Services.AddRazorPages();
+            builder.Services.AddServerSideBlazor();
+
+
+            // Register database connection
+            builder.Services.AddTransient<IDatabaseConnection>(db =>
+                new DatabaseConnection(builder.Configuration.GetConnectionString("LSSConnection")));
+
+            // DB Coonection
+            builder.Services.AddScoped<IDbConnection>(sp =>
+            {
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                var connectionString = configuration.GetConnectionString("LSSConnection")
+                                       ?? throw new InvalidOperationException("Connection string 'LSSConnection' not found.");
+                return new SqlConnection(connectionString);
+            });
+
 
             var app = builder.Build();
 
@@ -23,11 +61,17 @@ namespace Loan_Servicing_System
             }
 
             app.UseHttpsRedirection();
-
             app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseAntiforgery();
 
-            app.MapRazorComponents<App>()
+            // Map your root component (standard for modern Blazor templates)
+            app.MapRazorComponents<Loan_Servicing_System.Components.App>()
                 .AddInteractiveServerRenderMode();
 
             app.Run();
