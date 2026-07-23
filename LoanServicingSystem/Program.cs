@@ -1,5 +1,6 @@
 using System.Data;
 using CoreData;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Data.SqlClient;
 
 namespace Loan_Servicing_System
@@ -9,6 +10,22 @@ namespace Loan_Servicing_System
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // 1. Add Authentication Services
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.Cookie.Name = "LoanServicingAuth";
+                    options.LoginPath = "/login";
+                    options.LogoutPath = "/logout";
+                    options.AccessDeniedPath = "/unauthorized"; // Matches the tree you provided earlier!
+                    options.ExpireTimeSpan = TimeSpan.FromHours(8); // Expire session after 8 hours
+                });
+
+            // 2. Add Authorization Services
+            builder.Services.AddAuthentication();
+            builder.Services.AddAuthorization();
+
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
@@ -32,8 +49,6 @@ namespace Loan_Servicing_System
                 return new SqlConnection(connectionString);
             });
 
-            builder.Services.AddAuthentication();
-            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
