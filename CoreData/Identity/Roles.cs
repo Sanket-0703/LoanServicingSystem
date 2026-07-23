@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace CoreData.Identity
 {
     [Table("[Role]")]
-    public class Role
+    public class Roles
     {
         [Key]
         public Guid Id { get; set; }

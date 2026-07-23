@@ -1,4 +1,5 @@
 using System.Data;
+using CoreData;
 using Microsoft.Data.SqlClient;
 
 namespace Loan_Servicing_System
@@ -17,12 +18,17 @@ namespace Loan_Servicing_System
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
 
+
+            // Register database connection
+            builder.Services.AddTransient<IDatabaseConnection>(db =>
+                new DatabaseConnection(builder.Configuration.GetConnectionString("LSSConnection")));
+
             // DB Coonection
             builder.Services.AddScoped<IDbConnection>(sp =>
             {
                 var configuration = sp.GetRequiredService<IConfiguration>();
-                var connectionString = configuration.GetConnectionString("DefaultConnection")
-                                       ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+                var connectionString = configuration.GetConnectionString("LSSConnection")
+                                       ?? throw new InvalidOperationException("Connection string 'LSSConnection' not found.");
                 return new SqlConnection(connectionString);
             });
 
