@@ -1,5 +1,8 @@
 ﻿@page "/loans"
 @layout MainLayout
+@attribute [Authorize]
+@namespace LoanServicingSystem.Components.Pages
+@rendermode InteractiveServer
 
 <PageTitle>Loan Directory - Loan Servicing System</PageTitle>
 
@@ -30,6 +33,7 @@
             <option value="Approved">Approved</option>
             <option value="Disbursed">Disbursed</option>
             <option value="Closed">Closed</option>
+            <option value="Rejected">Rejected</option>
         </select>
     </div>
 </div>
@@ -49,76 +53,54 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-slate-200">
-                @foreach (var loan in FilteredLoans)
+                @if (IsLoading)
                 {
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-bold text-slate-900">@loan.LoanReference</div>
-                            <div class="text-xs text-slate-500">@loan.ProductName</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-slate-900">@loan.BorrowerName</div>
-                            <div class="text-xs text-slate-500">@loan.CustomerId</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-bold text-slate-900">$@loan.PrincipalAmount.ToString("N0")</div>
-                            <div class="text-xs text-slate-500">@loan.TenureMonths mos @loan.InterestRate%</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full @GetStatusBadgeClass(loan.Status)">
-                                @loan.Status
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                            @(loan.DisbursementDate.HasValue ? loan.DisbursementDate.Value.ToString("MMM dd, yyyy") : "-")
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="/loans/@loan.Id" class="text-indigo-600 hover:text-indigo-900 mr-3">Servicing Hub &rarr;</a>
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-500 text-sm">
+                            Loading loan directory...
                         </td>
                     </tr>
+                }
+                else if (!FilteredLoans.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-slate-500 text-sm">
+                            No loans found matching your criteria.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var loan in FilteredLoans)
+                    {
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-bold text-slate-900">@loan.LoanNumber</div>
+                                <div class="text-xs text-slate-500">@loan.ProductName</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-slate-900">@loan.CustomerName</div>
+                                <div class="text-xs text-slate-500 font-mono">ID: @loan.CustomerId.ToString().Substring(0, 8).ToUpper()</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-bold text-slate-900">@loan.Principal.ToString("C")</div>
+                                <div class="text-xs text-slate-500">@loan.Tenure mos @loan.InterestRate.ToString("0.00")%</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full @GetStatusBadgeClass(loan.Status)">
+                                    @loan.Status
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                @(loan.StartDate.HasValue ? loan.StartDate.Value.ToString("MMM dd, yyyy") : "-")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="/loans/@loan.Id" class="text-indigo-600 hover:text-indigo-900 mr-3">Servicing Hub &rarr;</a>
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
     </div>
 </div>
-
-@code {
-    private string SearchQuery { get; set; } = string.Empty;
-    private string SelectedStatus { get; set; } = string.Empty;
-
-    private List<LoanModel> Loans = new()
-    {
-        new LoanModel { Id = 1, LoanReference = "LN-2026-001", ProductName = "Personal Loan - Tier 1", BorrowerName = "Aarav Patel", CustomerId = "CUST-8273", PrincipalAmount = 15000, TenureMonths = 36, InterestRate = 12.5m, Status = "Disbursed", DisbursementDate = DateTime.Now.AddMonths(-2) },
-        new LoanModel { Id = 2, LoanReference = "LN-2026-002", ProductName = "Vehicle Loan (Used)", BorrowerName = "Meera Reddy", CustomerId = "CUST-9124", PrincipalAmount = 28000, TenureMonths = 48, InterestRate = 9.5m, Status = "Approved", DisbursementDate = null },
-        new LoanModel { Id = 3, LoanReference = "LN-2026-003", ProductName = "Micro-Business Advance", BorrowerName = "Vikram Singh", CustomerId = "CUST-3341", PrincipalAmount = 10000, TenureMonths = 12, InterestRate = 15.0m, Status = "Draft", DisbursementDate = null }
-    };
-
-    private IEnumerable<LoanModel> FilteredLoans =>
-        Loans.Where(l =>
-            (string.IsNullOrWhiteSpace(SearchQuery) || l.LoanReference.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) || l.BorrowerName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)) &&
-            (string.IsNullOrWhiteSpace(SelectedStatus) || l.Status.Equals(SelectedStatus, StringComparison.OrdinalIgnoreCase))
-        );
-
-    private string GetStatusBadgeClass(string status) => status switch
-    {
-        "Disbursed" => "bg-emerald-100 text-emerald-800",
-        "Approved" => "bg-blue-100 text-blue-800",
-        "Draft" => "bg-slate-100 text-slate-800",
-        "Closed" => "bg-purple-100 text-purple-800",
-        _ => "bg-gray-100 text-gray-800"
-    };
-
-    private class LoanModel
-    {
-        public int Id { get; set; }
-        public string LoanReference { get; set; } = string.Empty;
-        public string ProductName { get; set; } = string.Empty;
-        public string BorrowerName { get; set; } = string.Empty; // Fixed to semicolon
-        public string CustomerId { get; set; } = string.Empty;
-        public decimal PrincipalAmount { get; set; }
-        public int TenureMonths { get; set; }
-        public decimal InterestRate { get; set; }
-        public string Status { get; set; } = string.Empty;
-        public DateTime? DisbursementDate { get; set; }
-    }
-}
