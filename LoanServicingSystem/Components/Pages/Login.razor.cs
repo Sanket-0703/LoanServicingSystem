@@ -70,7 +70,8 @@ namespace LoanServicingSystem.Components.Pages
             if (HttpContext != null)
             {
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+                NavigationManager.NavigateTo(ReturnUrl ?? "/dashboard", forceLoad: true);
                 // Redirect back to the page they tried to access, or default to Dashboard
                 NavigationManager.NavigateTo(ReturnUrl ?? "/dashboard");
             }

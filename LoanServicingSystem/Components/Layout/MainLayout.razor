@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@using System.Linq
+@using System.Security.Claims
 
 <div class="min-h-screen bg-[#f8fafc] font-sans selection:bg-indigo-100 selection:text-indigo-900 pb-12">
 
@@ -13,42 +15,80 @@
                 </div>
                 <span class="text-xl font-bold text-slate-800 tracking-tight hidden sm:block">Loan System</span>
             </div>
+            <CascadingAuthenticationState>
+                <div class="hidden md:flex items-center gap-1 bg-slate-100/50 p-1 rounded-xl border border-slate-200/50">
 
-            <!-- Center Navigation Links -->
-            <div class="hidden md:flex items-center gap-1 bg-slate-100/50 p-1 rounded-xl border border-slate-200/50">
+                    <NavLink href="/dashboard"
+                             class="px-4 py-2 bg-white text-indigo-600 rounded-lg text-sm font-semibold shadow-sm border border-slate-200/50 transition-all"
+                             ActiveClass="bg-white text-indigo-600">
+                        Dashboard
+                    </NavLink>
 
-                <!-- Active Link Style -->
-                <a href="/dashboard" class="px-4 py-2 bg-white text-indigo-600 rounded-lg text-sm font-semibold shadow-sm border border-slate-200/50 transition-all">
-                    Dashboard
-                </a>
+                    <AuthorizeView Roles="Admin">
+                        <Authorized>
+                            <NavLink href="/users"
+                                     class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                Users
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
 
-                <!-- Inactive Link Style -->
-                <a href="/users" class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
-                    Users
-                </a>
+                    <AuthorizeView Roles="Admin,LoanOfficer,Auditor">
+                        <Authorized>
+                            <NavLink href="/loans"
+                                     class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                Loans
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
 
-                <a href="/loans" class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
-                    Loans
-                </a>
+                    <AuthorizeView Roles="Admin,LoanOfficer,CollectionsAgent">
+                        <Authorized>
+                            <NavLink href="/customers"
+                                     class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                Customers
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
 
-                <a href="/customers" class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
-                    Customers
-                </a>
-                <a href="/statements" class="text-slate-500 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition">
-                    Statements
-                </a>
-                <a href="/collections" class="text-slate-500 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition">
-                    Collections
-                </a>
-                <a href="/reports" class="text-slate-500 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition">
-                    Reports
-                </a>
-                <a href="/audit-trail" class="text-slate-500 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                    Audit Trail
-                </a>
-            </div>
+                    <AuthorizeView Roles="Admin,LoanOfficer,Auditor">
+                        <Authorized>
+                            <NavLink href="/statements"
+                                     class="text-slate-500 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition">
+                                Statements
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
 
+                    <AuthorizeView Roles="Admin,CollectionsAgent">
+                        <Authorized>
+                            <NavLink href="/collections"
+                                     class="text-slate-500 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition">
+                                Collections
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
+
+                    <AuthorizeView  Roles="Admin,Auditor">
+                        <Authorized>
+                            <NavLink href="/reports"
+                                     class="text-slate-500 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition">
+                                Reports
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
+
+                    <AuthorizeView Roles="Admin,Auditor">
+                        <Authorized>
+                            <NavLink href="/audit-trail"
+                                     class="text-slate-500 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition flex items-center">
+                                Audit Trail
+                            </NavLink>
+                        </Authorized>
+                    </AuthorizeView>
+
+                </div>
+            </CascadingAuthenticationState>
             <!-- Right Actions & Profile -->
             <div class="flex items-center gap-4">
 

@@ -13,17 +13,15 @@ namespace Loan_Servicing_System
 
             // 1. Add Authentication Services
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options =>
-                {
-                    options.Cookie.Name = "LoanServicingAuth";
-                    options.LoginPath = "/login";
-                    options.LogoutPath = "/logout";
-                    options.AccessDeniedPath = "/unauthorized"; // Matches the tree you provided earlier!
-                    options.ExpireTimeSpan = TimeSpan.FromHours(8); // Expire session after 8 hours
-                });
+     .AddCookie(options =>
+     {
+         options.Cookie.Name = "LoanServicingAuth";
+         options.LoginPath = "/login";
+         options.LogoutPath = "/logout";
+         options.AccessDeniedPath = "/unauthorized";
+         options.ExpireTimeSpan = TimeSpan.FromHours(8);
+     });
 
-            // 2. Add Authorization Services
-            builder.Services.AddAuthentication();
             builder.Services.AddAuthorization();
 
 
