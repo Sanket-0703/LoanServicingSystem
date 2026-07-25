@@ -1,5 +1,8 @@
 ﻿@page "/collections"
 @layout MainLayout
+@attribute [Authorize]
+@namespace LoanServicingSystem.Components.Pages
+@rendermode InteractiveServer
 
 <PageTitle>Collections Workspace - Loan Servicing System</PageTitle>
 
@@ -9,75 +12,82 @@
         <p class="text-sm text-slate-500 mt-1">Track distressed assets, manage late penalties, and review accounts past due.</p>
     </div>
     <div class="flex gap-3">
-        <button class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition shadow-sm">
+        <button class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition shadow-sm flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             Run Penalty Batch
         </button>
     </div>
 </div>
 
-<!-- Summary Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Overdue Portfolio</div>
-        <div class="text-2xl font-bold text-red-600">$1,240,500</div>
+@if (IsLoading)
+{
+    <div class="py-20 flex justify-center text-slate-400">Loading distressed assets...</div>
+}
+else
+{
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Overdue Arrears</div>
+            <div class="text-2xl font-bold text-red-600">@WorkspaceData.TotalOverduePortfolio.ToString("C0")</div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Accounts in DPD (30+)</div>
+            <div class="text-2xl font-bold text-slate-900">@WorkspaceData.Dpd30PlusAccounts Accounts</div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Recovered Today</div>
+            <div class="text-2xl font-bold text-emerald-600">@WorkspaceData.RecoveredToday.ToString("C0")</div>
+        </div>
     </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Accounts in DPD (30+)</div>
-        <div class="text-2xl font-bold text-slate-900">45 Accounts</div>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Recovered Today</div>
-        <div class="text-2xl font-bold text-emerald-600">$45,200</div>
-    </div>
-</div>
 
-<!-- Overdue Grid -->
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-200">
-            <thead class="bg-slate-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Loan ID / Borrower</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Days Past Due (DPD)</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Overdue Amount</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Penalty Due</th>
-                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-slate-200 text-sm">
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-bold text-slate-900">LN-2026-042</div>
-                        <div class="text-xs text-slate-500">Rajesh Kumar (CUST-1029)</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">45 Days DPD</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-900">$1,450.00</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-red-600 font-medium">$145.00</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right font-medium">
-                        <a href="/loans/2" class="text-indigo-600 hover:text-indigo-900 mr-3">Open Hub</a>
-                    </td>
-                </tr>
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-bold text-slate-900">LN-2026-089</div>
-                        <div class="text-xs text-slate-500">Sita Sharma (CUST-4412)</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">15 Days DPD</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-900">$920.00</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-red-600 font-medium">$45.00</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right font-medium">
-                        <a href="/loans/3" class="text-indigo-600 hover:text-indigo-900 mr-3">Open Hub</a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- Overdue Grid -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Loan ID / Borrower</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Days Past Due (DPD)</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Overdue Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Penalty Due</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-slate-200 text-sm">
+                    @if (!WorkspaceData.DelinquentAccounts.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-slate-500">
+                                <span class="block text-emerald-600 font-medium mb-1">Fantastic!</span>
+                                There are currently no overdue accounts in the portfolio.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var account in WorkspaceData.DelinquentAccounts)
+                        {
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-bold text-slate-900">@account.LoanNumber</div>
+                                    <div class="text-xs text-slate-500">@account.BorrowerName (@account.CustomerId.ToString().Substring(0, 8).ToUpper())</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full @GetDpdBadgeClass(account.DaysPastDue)">
+                                        @account.DaysPastDue Days DPD
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap font-bold text-slate-900">@account.OverdueAmount.ToString("C")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-red-600 font-medium">@account.PenaltyDue.ToString("C")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right font-medium">
+                                    <a href="/loans/@account.LoanId" class="text-indigo-600 hover:text-indigo-900">Open Hub</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-
-@code {
-    // Collections workspace logic
 }

@@ -99,4 +99,98 @@ namespace CoreData.Servicing
         public StatementMetadataDto Metadata { get; set; } = new();
         public List<StatementRowDto> Rows { get; set; } = new();
     }
+
+
+
+    public class ReportEngine
+    {
+        public static async Task<List<NpaReportRow>> GetNpaReportAsync(IDatabaseConnection databaseConnection)
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            // NPA: Accounts with pending schedules past due
+            const string sql = @"
+                SELECT 
+                    l.LoanNumber,
+                    c.Name AS BorrowerName,
+                    l.Principal AS OriginalPrincipal,
+                    DATEDIFF(day, MIN(rs.DueDate), GETDATE()) AS DaysPastDue,
+                    SUM(rs.Principal + rs.Interest) AS TotalOverdue
+                FROM [dbo].[RepaymentSchedules] rs
+                INNER JOIN [dbo].[Loans] l ON rs.LoanId = l.Id
+                INNER JOIN [dbo].[Customers] c ON l.CustomerId = c.Id
+                WHERE rs.Status = 'Pending' AND rs.DueDate < GETDATE()
+                GROUP BY l.LoanNumber, c.Name, l.Principal
+                ORDER BY DaysPastDue DESC";
+
+            var data = await connection.QueryAsync<NpaReportRow>(sql);
+            return data.ToList();
+        }
+
+        public static async Task<List<InterestReportRow>> GetInterestEarnedReportAsync(IDatabaseConnection databaseConnection)
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            // Accrued interest grouped by product
+            const string sql = @"
+                SELECT 
+                    p.Name AS ProductName,
+                    COUNT(DISTINCT l.Id) AS ActiveAccounts,
+                    ISNULL(SUM(rs.Interest), 0) AS TotalInterestAccrued
+                FROM [dbo].[Loans] l
+                INNER JOIN [dbo].[LoanProducts] p ON l.ProductId = p.Id
+                INNER JOIN [dbo].[RepaymentSchedules] rs ON rs.LoanId = l.Id
+                WHERE l.Status NOT IN ('Draft', 'Rejected', 'Closed')
+                GROUP BY p.Name";
+
+            var data = await connection.QueryAsync<InterestReportRow>(sql);
+            return data.ToList();
+        }
+
+        public static async Task<List<CollectionsReconRow>> GetDailyCollectionsReconAsync(IDatabaseConnection databaseConnection, DateTime targetDate)
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            // Payments matching the target date
+            const string sql = @"
+                SELECT 
+                    p.PaymentDate AS TransactionDate,
+                    l.LoanNumber,
+                    p.Amount AS AmountCollected,
+                    p.Mode AS PaymentMethod,
+                    p.ReferenceNumber AS BankReference
+                FROM [dbo].[Payments] p
+                INNER JOIN [dbo].[Loans] l ON p.LoanId = l.Id
+                WHERE CAST(p.PaymentDate AS DATE) = CAST(@TargetDate AS DATE)
+                ORDER BY p.PaymentDate DESC";
+
+            var data = await connection.QueryAsync<CollectionsReconRow>(sql, new { TargetDate = targetDate.Date });
+            return data.ToList();
+        }
+    }
+
+    public class NpaReportRow
+    {
+        public string LoanNumber { get; set; } = string.Empty;
+        public string BorrowerName { get; set; } = string.Empty;
+        public decimal OriginalPrincipal { get; set; }
+        public int DaysPastDue { get; set; }
+        public decimal TotalOverdue { get; set; }
+    }
+
+    public class InterestReportRow
+    {
+        public string ProductName { get; set; } = string.Empty;
+        public int ActiveAccounts { get; set; }
+        public decimal TotalInterestAccrued { get; set; }
+    }
+
+    public class CollectionsReconRow
+    {
+        public DateTime TransactionDate { get; set; }
+        public string LoanNumber { get; set; } = string.Empty;
+        public decimal AmountCollected { get; set; }
+        public string PaymentMethod { get; set; } = string.Empty;
+        public string BankReference { get; set; } = string.Empty;
+    }
 }

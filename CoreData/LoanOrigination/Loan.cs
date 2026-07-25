@@ -119,5 +119,112 @@ namespace CoreData.LoanOrigination
                 throw;
             }
         }
+
+        public class DashboardMetrics
+        {
+            public int ActiveLoanCount { get; set; }
+            public decimal ActiveLoanTotal { get; set; }
+
+            public int OverdueAccountCount { get; set; }
+            public decimal OverdueAmountTotal { get; set; }
+
+            public decimal CollectionsToday { get; set; }
+
+            public List<ProductDistributionDto> ProductDistribution { get; set; } = new();
+            public List<DailyCollectionDto> Last7DaysCollections { get; set; } = new();
+
+            public static async Task<DashboardMetrics> GetLiveMetricsAsync(IDatabaseConnection databaseConnection, DateTime today)
+            {
+                using var connection = databaseConnection.GetConnection();
+                var metrics = new DashboardMetrics();
+
+                // 1. Active Loans
+                const string activeSql = @"
+                SELECT 
+                    COUNT(Id) AS ActiveLoanCount, 
+                    ISNULL(SUM(Principal), 0) AS ActiveLoanTotal
+                FROM [dbo].[Loans] 
+                WHERE Status NOT IN ('Draft', 'Closed', 'Rejected')";
+
+                var activeData = await connection.QueryFirstOrDefaultAsync<DashboardMetrics>(activeSql);
+                if (activeData != null)
+                {
+                    metrics.ActiveLoanCount = activeData.ActiveLoanCount;
+                    metrics.ActiveLoanTotal = activeData.ActiveLoanTotal;
+                }
+
+                // 2. Overdue Accounts (Pending schedules where DueDate is in the past)
+                const string overdueSql = @"
+                SELECT 
+                    COUNT(DISTINCT LoanId) AS OverdueAccountCount, 
+                    ISNULL(SUM(Principal + Interest), 0) AS OverdueAmountTotal
+                FROM [dbo].[RepaymentSchedules]
+                WHERE Status = 'Pending' AND DueDate < @Today";
+
+                var overdueData = await connection.QueryFirstOrDefaultAsync<DashboardMetrics>(overdueSql, new { Today = today.Date });
+                if (overdueData != null)
+                {
+                    metrics.OverdueAccountCount = overdueData.OverdueAccountCount;
+                    metrics.OverdueAmountTotal = overdueData.OverdueAmountTotal;
+                }
+
+                // 3. Collections Today
+                const string todayColSql = @"
+                SELECT ISNULL(SUM(Amount), 0)
+                FROM [dbo].[Payments]
+                WHERE CAST(PaymentDate AS DATE) = CAST(@Today AS DATE)";
+
+                metrics.CollectionsToday = await connection.QueryFirstOrDefaultAsync<decimal>(todayColSql, new { Today = today.Date });
+
+                // 4. Product Distribution
+                const string prodSql = @"
+                SELECT 
+                    p.Name AS ProductName, 
+                    COUNT(l.Id) AS LoanCount
+                FROM [dbo].[Loans] l
+                INNER JOIN [dbo].[LoanProducts] p ON l.ProductId = p.Id
+                WHERE l.Status NOT IN ('Draft', 'Rejected')
+                GROUP BY p.Name";
+
+                var prodDist = await connection.QueryAsync<ProductDistributionDto>(prodSql);
+                metrics.ProductDistribution = prodDist.ToList();
+
+                // 5. Last 7 Days Collections Trend
+                var sevenDaysAgo = today.Date.AddDays(-6);
+                const string trendSql = @"
+                SELECT 
+                    CAST(PaymentDate AS DATE) AS PaymentDate, 
+                    ISNULL(SUM(Amount), 0) AS TotalAmount
+                FROM [dbo].[Payments]
+                WHERE PaymentDate >= @SevenDaysAgo
+                GROUP BY CAST(PaymentDate AS DATE)";
+
+                var trends = await connection.QueryAsync<DailyCollectionDto>(trendSql, new { SevenDaysAgo = sevenDaysAgo });
+
+                // Fill in missing days with 0 for the chart
+                for (int i = 0; i < 7; i++)
+                {
+                    var targetDate = sevenDaysAgo.AddDays(i);
+                    var existing = trends.FirstOrDefault(t => t.PaymentDate.Date == targetDate.Date);
+                    metrics.Last7DaysCollections.Add(existing ?? new DailyCollectionDto { PaymentDate = targetDate, TotalAmount = 0 });
+                }
+
+                return metrics;
+            }
+        }
+
+        public class ProductDistributionDto
+        {
+            public string ProductName { get; set; } = string.Empty;
+            public int LoanCount { get; set; }
+            public double Percentage { get; set; }
+        }
+
+        public class DailyCollectionDto
+        {
+            public DateTime PaymentDate { get; set; }
+            public decimal TotalAmount { get; set; }
+            public int ChartHeight { get; set; }
+        }
     }
 }
