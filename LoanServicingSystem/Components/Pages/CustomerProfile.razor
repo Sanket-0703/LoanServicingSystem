@@ -1,126 +1,136 @@
 ﻿@page "/customers/new"
-@page "/customers/{Id:int}"
+@page "/customers/{Id:guid}"
 @layout MainLayout
+@attribute [Authorize]
+@namespace LoanServicingSystem.Components.Pages
+@rendermode InteractiveServer
 
-<PageTitle>Customer Profile - Loan Servicing System</PageTitle>
+<PageTitle>@(Id.HasValue ? "Edit Customer" : "Add New Customer") - Loan Servicing System</PageTitle>
 
-<div class="mb-6 flex items-center justify-between">
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-        <div class="flex items-center gap-3">
-            <a href="/customers" class="text-slate-400 hover:text-slate-600 transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            </a>
-            <h2 class="text-2xl font-bold text-slate-800">@(Id.HasValue ? "Customer Profile & KYC" : "Register New Customer")</h2>
-        </div>
-        <p class="text-sm text-slate-500 mt-1 ml-8">Capture and verify borrower identification, financial health, and KYC compliance.</p>
+        <h2 class="text-2xl font-bold text-slate-800">@(Id.HasValue ? "Customer Profile" : "Onboard New Customer")</h2>
+        <p class="text-sm text-slate-500 mt-1">Capture borrower KYC details, employment information, and contact records.</p>
     </div>
-    <div class="flex gap-3">
-        <a href="/customers" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition">
-            Cancel
-        </a>
-        <button type="button" @onclick="SaveCustomer" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
-            Save Profile
-        </button>
-    </div>
+    <button @onclick="GoBack" class="inline-flex items-center justify-center bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition shadow-sm">
+        <svg class="w-5 h-5 mr-2 -ml-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Back to Directory
+    </button>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+@if (IsLoading)
+{
+    <div class="text-center py-12 text-slate-500">Loading customer profile...</div>
+}
+else
+{
+    <EditForm Model="@ActiveCustomer" OnValidSubmit="@SaveCustomerAsync">
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl shadow-sm">
+                @ErrorMessage
+            </div>
+        }
 
-    <!-- Left Column: Personal & KYC Information Form -->
-    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
-        <!-- Basic Information Card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Personal Information</h3>
+            <div class="p-6 md:p-8 space-y-8 relative">
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Status Badge Overlay for existing customers -->
+                @if (Id.HasValue)
+                {
+                    <div class="absolute top-6 right-6 md:top-8 md:right-8">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full @(ActiveCustomer.KycStatus == "Verified" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800")">
+                            KYC @ActiveCustomer.KycStatus
+                        </span>
+                    </div>
+                }
+
+                <!-- Basic Info -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 focus:bg-white transition" placeholder="e.g. Aarav Patel" />
+                    <h3 class="text-base font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Personal Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+                            <InputText @bind-Value="ActiveCustomer.Name" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition" placeholder="e.g. John Doe" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                            <InputText @bind-Value="ActiveCustomer.Email" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition" placeholder="user@example.com" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
+                            <InputText @bind-Value="ActiveCustomer.Phone" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition" placeholder="+91 9876543210" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Residential Address</label>
+                            <InputTextArea @bind-Value="ActiveCustomer.Address" rows="1" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition resize-none" placeholder="Full street address..." />
+                        </div>
+                    </div>
                 </div>
+
+                <!-- KYC -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                    <input type="email" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 focus:bg-white transition" placeholder="aarav@example.com" />
+                    <h3 class="text-base font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Identity & KYC Verification</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">PAN Number <span class="text-red-500">*</span></label>
+                            <InputText @bind-Value="ActiveCustomer.PAN" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition uppercase" placeholder="ABCDE1234F" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Aadhaar Number</label>
+                            <InputText @bind-Value="ActiveCustomer.Aadhaar" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition" placeholder="12-digit ID Number" />
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Financials -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 focus:bg-white transition" placeholder="+91 98765 43210" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
-                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 focus:bg-white transition" />
+                    <h3 class="text-base font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Employment & Financials</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Employment Type</label>
+                            <InputSelect @bind-Value="ActiveCustomer.EmploymentType" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition">
+                                <option value="">Select type...</option>
+                                <option value="Salaried">Salaried</option>
+                                <option value="Self-Employed">Self-Employed</option>
+                                <option value="Business">Business Owner</option>
+                                <option value="Unemployed">Unemployed</option>
+                            </InputSelect>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Business / Employer Name</label>
+                            <InputText @bind-Value="ActiveCustomer.BusinessName" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition" placeholder="Company Name" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Monthly Income (₹)</label>
+                            <InputNumber @bind-Value="ActiveCustomer.Income" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Credit Score</label>
+                            <InputNumber @bind-Value="ActiveCustomer.CreditScore" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition" placeholder="e.g. 750" />
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Regulatory & KYC Card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">KYC & Regulatory Details</h3>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">PAN Number</label>
-                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 focus:bg-white transition" placeholder="ABCDE1234F" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Government ID / Aadhaar Reference</label>
-                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 focus:bg-white transition" placeholder="Enter 12-digit ID reference" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">KYC Verification Status</label>
-                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition">
-                        <option>Pending</option>
-                        <option>Verified</option>
-                        <option>Rejected</option>
-                    </select>
-                </div>
+            <!-- Footer Actions -->
+            <div class="bg-slate-50 p-6 border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                <button type="button" @onclick="GoBack" class="w-full sm:w-auto px-5 py-2.5 border border-slate-300 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm">
+                    Cancel
+                </button>
+                <button type="submit" disabled="@IsSaving" class="w-full sm:w-auto px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition shadow-sm flex items-center justify-center">
+                    @if (IsSaving)
+                    {
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        <span>@(Id.HasValue ? "Update Customer Profile" : "Save Customer Profile")</span>
+                    }
+                </button>
             </div>
         </div>
-
-    </div>
-
-    <!-- Right Column: Financial Profile & Risk Score -->
-    <div class="space-y-6">
-
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Financial Profile</h3>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Monthly Income ($)</label>
-                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 focus:bg-white transition" placeholder="5500" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Credit Score</label>
-                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 focus:bg-white transition" placeholder="750" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Employment Type</label>
-                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition">
-                        <option>Salaried</option>
-                        <option>Self-Employed</option>
-                        <option>Business Owner</option>
-                        <option>Freelancer</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-6 text-indigo-900">
-            <h4 class="font-semibold text-sm mb-1">Compliance Check</h4>
-            <p class="text-xs text-indigo-700 leading-relaxed">Ensure all physical documents match uploaded records before approving KYC verification status.</p>
-        </div>
-
-    </div>
-
-</div>
-
-@code {
-    [Parameter]
-    public int? Id { get; set; }
-
-    private void SaveCustomer()
-    {
-        // Placeholder save action
-    }
+    </EditForm>
 }
