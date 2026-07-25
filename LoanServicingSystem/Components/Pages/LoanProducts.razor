@@ -1,6 +1,7 @@
 ﻿@page "/loan-products"
-@layout MainLayout
-@* @attribute [Authorize(Roles = "Admin")] *@
+@attribute [Authorize(Roles = "Admin")]
+@namespace LoanServicingSystem.Components.Pages
+@rendermode InteractiveServer
 
 <PageTitle>Loan Products Configuration - Loan Servicing System</PageTitle>
 
@@ -9,83 +10,138 @@
         <h2 class="text-2xl font-bold text-slate-800">Loan Products Configuration</h2>
         <p class="text-sm text-slate-500 mt-1">Define institutional loan templates, interest rate tiers, and processing fees.</p>
     </div>
-    <button class="inline-flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
+    <button @onclick="HandleCreateProduct" class="inline-flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
         <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
         Create Product Template
     </button>
 </div>
 
 <!-- Products Grid -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+@if (IsLoading)
+{
+    <div class="text-center py-12 text-slate-500">Loading loan product configurations...</div>
+}
+else if (!AllProducts.Any())
+{
+    <div class="text-center py-12 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <p class="text-slate-500 text-sm">No loan product templates found. Click "Create Product Template" to begin.</p>
+    </div>
+}
+else
+{
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        @foreach (var product in AllProducts)
+        {
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition">
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Configured</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-1">@product.Name</h3>
+                    <p class="text-xs text-slate-500 mb-4 h-10 overflow-hidden">
+                        @(string.IsNullOrWhiteSpace(product.PenaltyRules) ? "No penalty rules defined." : product.PenaltyRules)
+                    </p>
 
-    <!-- Product Card 1 -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition">
-        <div>
-            <div class="flex justify-between items-start mb-4">
-                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Active</span>
-                <span class="text-xs font-mono text-slate-400">PRD-01</span>
+                    <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
+                        <div class="flex justify-between"><span class="text-slate-500">Interest Rate:</span> <span class="font-bold text-slate-900">@product.InterestRate.ToString("0.00")% / yr</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Tenure:</span> <span class="font-bold text-slate-900">@product.TenureMonths Months</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Processing Fee:</span> <span class="font-bold text-slate-900">@product.ProcessingFee.GetValueOrDefault().ToString("C")</span></div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-2">
+                    <button @onclick="() => HandleConfigureProduct(product.Id)" class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">Configure</button>
+                </div>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Personal Loan - Tier 1</h3>
-            <p class="text-xs text-slate-500 mb-4">Unsecured general-purpose consumer lending facility.</p>
+        }
+    </div>
+}
 
-            <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
-                <div class="flex justify-between"><span class="text-slate-500">Interest Rate:</span> <span class="font-bold text-slate-900">12.5% / yr</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Max Tenure:</span> <span class="font-bold text-slate-900">36 Months</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Processing Fee:</span> <span class="font-bold text-slate-900">1.0%</span></div>
+<!-- Centered Modal for Add / Edit Product -->
+@if (ShowModal)
+{
+    <!-- Backdrop -->
+    <div class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out"></div>
+
+    <!-- Modal Placement -->
+    <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+
+            <!-- Modal Panel -->
+            <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+
+                <!-- Header -->
+                <div class="flex items-center justify-between bg-slate-50 border-b border-slate-200 px-6 py-4">
+                    <h3 class="text-lg font-bold text-slate-800">@(IsUpdate ? "Configure Product Template" : "Create Product Template")</h3>
+                    <button type="button" class="rounded-full p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors duration-200" @onclick="CloseModal">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(ModalErrorMessage))
+                {
+                    <div class="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                        @ModalErrorMessage
+                    </div>
+                }
+
+               
+                <!-- Form Content -->
+                <div class="p-6">
+                    <EditForm Model="@ActiveProduct" OnValidSubmit="@SaveProductAsync">
+                        <div class="space-y-4">
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Product Name <span class="text-red-500">*</span></label>
+                                <InputText @bind-Value="ActiveProduct.Name" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" placeholder="e.g. Education Advance" />
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Interest Rate (%/yr) <span class="text-red-500">*</span></label>
+                                    <InputNumber @bind-Value="ActiveProduct.InterestRate" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Tenure (Months) <span class="text-red-500">*</span></label>
+                                    <InputNumber @bind-Value="ActiveProduct.TenureMonths" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Processing Fee <span class="text-red-500">*</span></label>
+                                <InputNumber @bind-Value="ActiveProduct.ProcessingFee" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Penalty Rules</label>
+                                <InputTextArea @bind-Value="ActiveProduct.PenaltyRules" rows="2" class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none" placeholder="Enter penalty rules for late payments" />
+                            </div>
+
+                        </div>
+
+                        <!-- Footer Actions MOVED INSIDE the EditForm -->
+                        <div class="border-t border-slate-200 bg-slate-50 px-6 py-4 mt-6 -mx-6 -mb-6 rounded-b-xl">
+                            <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                                <button type="button" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition shadow-sm" @onclick="CloseModal">
+                                    Cancel
+                                </button>
+                                <!-- CHANGED to type="submit", REMOVED @onclick -->
+                                <button type="submit" disabled="@IsSaving" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition shadow-sm">
+                                    @if (IsSaving)
+                                    {
+                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        <span>Saving...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@(IsUpdate ? "Update Template" : "Save Template")</span>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </EditForm>
+                </div>
             </div>
-        </div>
-
-        <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-2">
-            <button class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">Configure</button>
         </div>
     </div>
-
-    <!-- Product Card 2 -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition">
-        <div>
-            <div class="flex justify-between items-start mb-4">
-                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Active</span>
-                <span class="text-xs font-mono text-slate-400">PRD-02</span>
-            </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Vehicle Loan (Used)</h3>
-            <p class="text-xs text-slate-500 mb-4">Secured lending facility for pre-owned automobiles.</p>
-
-            <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
-                <div class="flex justify-between"><span class="text-slate-500">Interest Rate:</span> <span class="font-bold text-slate-900">9.5% / yr</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Max Tenure:</span> <span class="font-bold text-slate-900">48 Months</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Processing Fee:</span> <span class="font-bold text-slate-900">1.5%</span></div>
-            </div>
-        </div>
-
-        <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-2">
-            <button class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">Configure</button>
-        </div>
-    </div>
-
-    <!-- Product Card 3 -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition">
-        <div>
-            <div class="flex justify-between items-start mb-4">
-                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Draft</span>
-                <span class="text-xs font-mono text-slate-400">PRD-03</span>
-            </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Micro-Business Advance</h3>
-            <p class="text-xs text-slate-500 mb-4">Short-term working capital financing for small business owners.</p>
-
-            <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
-                <div class="flex justify-between"><span class="text-slate-500">Interest Rate:</span> <span class="font-bold text-slate-900">15.0% / yr</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Max Tenure:</span> <span class="font-bold text-slate-900">12 Months</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Processing Fee:</span> <span class="font-bold text-slate-900">2.0%</span></div>
-            </div>
-        </div>
-
-        <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-2">
-            <button class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">Configure</button>
-        </div>
-    </div>
-
-</div>
-
-@code {
-    // Loan products configuration logic placeholder
 }
