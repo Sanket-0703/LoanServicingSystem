@@ -1,0 +1,23 @@
+﻿@namespace LoanServicingSystem.Components.Shared
+@using ApexCharts
+@using CoreData.Dashboard.Models
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+
+    <h2 class="text-lg font-bold text-slate-800 mb-6">
+        Collections Trend
+    </h2>
+
+    <ApexChart TItem="CollectionTrendModel"
+               Options="Options">
+
+        <ApexPointSeries TItem="CollectionTrendModel"
+                         Items="Data"
+                         Name="Collections"
+                         SeriesType="SeriesType.Area"
+                         XValue="@(x => x.Date)"
+                         YValue="@(x => x.Amount)" />
+
+    </ApexChart>
+
+</div>  

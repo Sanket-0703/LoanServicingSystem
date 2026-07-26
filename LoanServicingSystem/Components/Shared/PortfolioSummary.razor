@@ -1,0 +1,41 @@
+﻿@namespace LoanServicingSystem.Components.Shared
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+
+    <h2 class="text-lg font-semibold text-slate-800 mb-6">
+        Portfolio Summary
+    </h2>
+
+    <div class="grid grid-cols-2 gap-6">
+
+        <div>
+            <p class="text-sm text-slate-500">Draft Loans</p>
+            <h3 class="text-2xl font-bold text-amber-600">
+                @Model.DraftLoanCount
+            </h3>
+        </div>
+
+        <div>
+            <p class="text-sm text-slate-500">Active Loans</p>
+            <h3 class="text-2xl font-bold text-indigo-600">
+                @Model.ActiveLoanCount
+            </h3>
+        </div>
+
+        <div>
+            <p class="text-sm text-slate-500">Closed Loans</p>
+            <h3 class="text-2xl font-bold text-emerald-600">
+                @Model.ClosedLoanCount
+            </h3>
+        </div>
+
+        <div>
+            <p class="text-sm text-slate-500">Overdue Loans</p>
+            <h3 class="text-2xl font-bold text-red-600">
+                @Model.OverdueLoanCount
+            </h3>
+        </div>
+
+    </div>
+
+</div>

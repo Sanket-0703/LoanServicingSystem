@@ -1,0 +1,33 @@
+﻿@page "/test-chart"
+@rendermode InteractiveServer
+
+@using ApexCharts
+
+<h3>Test Chart</h3>
+
+<ApexChart TItem="SalesData">
+
+    <ApexPointSeries TItem="SalesData"
+                     Items="Sales"
+                     XValue="@(x => x.Month)"
+                     YValue="@(x => x.Amount)" />
+
+</ApexChart>
+
+@code {
+
+    public class SalesData
+    {
+        public string Month { get; set; } = "";
+        public int Amount { get; set; }
+    }
+
+    List<SalesData> Sales =
+        [
+        new() { Month = "Jan", Amount = 100 },
+        new() { Month = "Feb", Amount = 150 },
+        new() { Month = "Mar", Amount = 90 },
+        new() { Month = "Apr", Amount = 250 }
+    ];
+
+}

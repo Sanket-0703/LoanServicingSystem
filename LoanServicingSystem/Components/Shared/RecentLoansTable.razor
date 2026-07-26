@@ -1,0 +1,111 @@
+﻿@namespace LoanServicingSystem.Components.Shared
+
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+
+        <div>
+
+            <h2 class="text-lg font-semibold text-slate-800">
+
+                Recent Loan Applications
+
+            </h2>
+
+            <p class="text-sm text-slate-500">
+
+                Latest loans created in the system
+
+            </p>
+
+        </div>
+
+        <NavLink href="/loans"
+                 class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+
+            View All →
+
+        </NavLink>
+
+    </div>
+
+    <table class="w-full">
+
+        <thead class="bg-slate-50">
+
+            <tr>
+
+                <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                    Loan
+                </th>
+
+                <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                    Customer
+                </th>
+
+                <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                    Product
+                </th>
+
+                <th class="px-6 py-3 text-right text-xs font-semibold uppercase text-slate-500">
+                    Amount
+                </th>
+
+                <th class="px-6 py-3 text-center text-xs font-semibold uppercase text-slate-500">
+                    Status
+                </th>
+
+                <th class="px-6 py-3 text-center text-xs font-semibold uppercase text-slate-500">
+                    Date
+                </th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            @foreach (var loan in Loans)
+            {
+                <tr class="border-t border-slate-100 hover:bg-slate-50">
+
+                    <td class="px-6 py-4 font-medium">
+                        @loan.LoanNumber
+                    </td>
+
+                    <td class="px-6 py-4">
+                        @loan.CustomerName
+                    </td>
+
+                    <td class="px-6 py-4">
+                        @loan.ProductName
+                    </td>
+
+                    <td class="px-6 py-4 text-right font-semibold">
+                        @loan.Principal.ToString("C0")
+                    </td>
+
+                    <td class="px-6 py-4 text-center">
+
+                        <span class="@GetStatusClass(loan.Status)">
+
+                            @loan.Status
+
+                        </span>
+
+                    </td>
+
+                    <td class="px-6 py-4 text-center">
+
+                        @(loan.StartDate?.ToString("dd MMM yyyy"))
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+</div>

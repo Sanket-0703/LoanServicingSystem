@@ -1,0 +1,36 @@
+﻿@namespace LoanServicingSystem.Components.Shared
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+
+    <div>
+        <h1 class="text-3xl font-bold text-slate-900">
+            Administrator Dashboard
+        </h1>
+
+        <p class="mt-2 text-slate-500">
+            Welcome back! Here's what's happening today.
+        </p>
+
+        <p class="text-sm text-slate-400 mt-1">
+            @CurrentDate
+        </p>
+    </div>
+
+    <button @onclick="RefreshDashboard"
+            class="mt-4 md:mt-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition">
+
+        <svg class="w-5 h-5"
+             fill="none"
+             stroke="currentColor"
+             viewBox="0 0 24 24">
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582M20 20v-5h-.581M5.08 9A7.002 7.002 0 0117.657 6.343L20 9M4 15l2.343 2.657A7.002 7.002 0 0018.92 15" />
+        </svg>
+
+        Refresh
+
+    </button>
+
+</div>

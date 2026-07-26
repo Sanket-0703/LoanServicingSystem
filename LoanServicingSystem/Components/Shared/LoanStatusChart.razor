@@ -1,0 +1,22 @@
+﻿@namespace LoanServicingSystem.Components.Pages
+@using ApexCharts
+@using CoreData.Dashboard.Models
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+
+    <h2 class="text-lg font-bold text-slate-800 mb-6">
+        Loan Status Distribution
+    </h2>
+
+    <ApexChart TItem="LoanStatusChartModel"
+               Title="Loan Status">
+
+        <ApexPointSeries TItem="LoanStatusChartModel"
+                         Items="Data"
+                         Name="Loans"
+                         SeriesType="SeriesType.Donut"
+                         XValue="@(e => e.Status)"
+                         YValue="@(e => e.Count)" />
+
+    </ApexChart>
+</div>

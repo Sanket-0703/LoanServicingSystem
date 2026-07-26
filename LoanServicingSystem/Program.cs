@@ -1,7 +1,12 @@
 using System.Data;
+using ApexCharts;
 using CoreData;
+using CoreData.Dashboard;
+using CoreData.Dashboard.Interfaces;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Data.SqlClient;
+
 
 namespace Loan_Servicing_System
 {
@@ -33,6 +38,8 @@ namespace Loan_Servicing_System
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
 
+            builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+            builder.Services.AddApexCharts();
 
             // Register database connection
             builder.Services.AddTransient<IDatabaseConnection>(db =>
@@ -71,6 +78,12 @@ namespace Loan_Servicing_System
             // Map your root component (standard for modern Blazor templates)
             app.MapRazorComponents<Loan_Servicing_System.Components.App>()
                 .AddInteractiveServerRenderMode();
+
+            app.MapGet("/logout", async context =>
+            {
+                await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                context.Response.Redirect("/login");
+            });
 
             app.Run();
         }

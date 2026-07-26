@@ -1,0 +1,93 @@
+﻿@namespace LoanServicingSystem.Components.Pages
+@using LoanServicingSystem.Components.Shared
+
+<div class="space-y-5">
+
+    <!-- Header -->
+    <DashboardHeader OnRefresh="ReloadDashboard" />
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+        <StatCard IsLoading="@IsLoading"
+                  Title="Active Loans"
+                  Value="@Dashboard.ActiveLoanCount.ToString()"
+                  SubTitle="Currently Active">
+
+            <Icon>
+                <svg class="w-6 h-6"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+
+                    <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+
+                </svg>
+            </Icon>
+
+        </StatCard>
+
+        <StatCard IsLoading="@IsLoading"
+                  Title="Portfolio"
+                  Value="@Dashboard.TotalPortfolio.ToString("C0")"
+                  SubTitle="Outstanding Principal">
+
+            <Icon>💰</Icon>
+
+        </StatCard>
+
+        <StatCard IsLoading="@IsLoading"
+                  Title="Customers"
+                  Value="@Dashboard.CustomerCount.ToString()"
+                  SubTitle="Registered Customers">
+
+            <Icon>👥</Icon>
+
+        </StatCard>
+
+        <StatCard IsLoading="@IsLoading"
+                  Title="Collections Today"
+                  Value="@Dashboard.CollectionsToday.ToString("C0")"
+                  SubTitle="Today's Collection">
+
+            <Icon>📈</Icon>
+
+        </StatCard>
+
+    </div>
+
+    <!-- Portfolio + Quick Actions -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+
+        <PortfolioSummary Model="Dashboard.Portfolio" />
+
+        <QuickActions Actions="QuickActionsList" />
+
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+
+        <div class="xl:col-span-2">
+            <CollectionTrendChart Data="Dashboard.CollectionTrend" />
+        </div>
+
+        <div>
+            <LoanStatusChart Data="Dashboard.LoanStatus" />
+        </div>
+
+    </div>
+
+    <!-- Tables -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+
+        <RecentLoansTable Loans="Dashboard.RecentLoans" />
+
+        <RecentPaymentsTable Payments="Dashboard.RecentPayments" />
+
+    </div>
+
+</div>
