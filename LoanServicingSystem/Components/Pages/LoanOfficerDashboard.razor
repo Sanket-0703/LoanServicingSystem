@@ -1,7 +1,91 @@
 ﻿@namespace LoanServicingSystem.Components.Pages
-<h1 class="text-3xl font-bold text-slate-800">
-    Loan Officer Dashboard
-</h1>
-@code {
+@using LoanServicingSystem.Components.Shared
 
-}
+<div class="space-y-5">
+
+    <DashboardHeader 
+        OnRefresh="ReloadDashboard"
+        Title="Loan Officer"/>
+
+    <!-- =============================== -->
+    <!-- TOP SECTION -->
+    <!-- =============================== -->
+
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+
+        <!-- LEFT -->
+        <div class="xl:col-span-5 space-y-5">
+
+            <div class="grid grid-cols-2 gap-4">
+
+                <StatCard
+                    IsLoading="@IsLoading"
+                    Title="Applications"
+                    Value="@Dashboard.TotalApplications.ToString()"
+                    SubTitle="Total Applications">
+
+                    <Icon>📄</Icon>
+
+                </StatCard>
+
+                <StatCard
+                    IsLoading="@IsLoading"
+                    Title="Pending"
+                    Value="@Dashboard.PendingApprovalCount.ToString()"
+                    SubTitle="Awaiting Approval">
+
+                    <Icon>⏳</Icon>
+
+                </StatCard>
+
+                <StatCard
+                    IsLoading="@IsLoading"
+                    Title="Approved"
+                    Value="@Dashboard.ApprovedCount.ToString()"
+                    SubTitle="Approved">
+
+                    <Icon>✅</Icon>
+
+                </StatCard>
+
+                <StatCard
+                    IsLoading="@IsLoading"
+                    Title="Rejected"
+                    Value="@Dashboard.RejectedCount.ToString()"
+                    SubTitle="Rejected">
+
+                    <Icon>❌</Icon>
+
+                </StatCard>
+
+            </div>
+
+            <QuickActions Actions="QuickActionsList"/>
+
+        </div>
+
+        <!-- RIGHT -->
+
+        <div class="xl:col-span-7 space-y-5">
+
+            <CollectionTrendChart
+                Data="Dashboard.WeeklyApplications"/>
+
+            <LoanStatusChart
+                Data="Dashboard.ApplicationStatus"/>
+
+        </div>
+
+    </div>
+
+    <!-- =============================== -->
+    <!-- TABLES -->
+    <!-- =============================== -->
+
+    <RecentLoansTable Title="My Applications"
+                      Loans="Dashboard.MyApplications" />
+
+    <RecentLoansTable Title="Pending Approvals"
+                      Loans="Dashboard.PendingApprovals" />
+
+</div>

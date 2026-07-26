@@ -8,6 +8,8 @@ public partial class RecentLoansTable
     [Parameter]
     public List<RecentLoanModel> Loans { get; set; } = new();
 
+    [Parameter]
+    public string Title { get; set; } = "Recent Loans";
     protected string GetStatusClass(string status)
     {
         return status switch

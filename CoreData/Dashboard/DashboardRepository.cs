@@ -160,4 +160,133 @@ ORDER BY MIN(PaymentDate);
 
         return dashboard;
     }
+
+    public async Task<LoanOfficerDashboardModel> GetLoanOfficerDashboardAsync()
+    {
+        const string sql = @"
+
+--------------------------------------------------------
+-- KPI CARDS
+--------------------------------------------------------
+
+SELECT
+
+COUNT(*) TotalApplications,
+
+COUNT(CASE WHEN Status='Pending' THEN 1 END)
+    PendingApprovalCount,
+
+COUNT(CASE WHEN Status='Approved' THEN 1 END)
+    ApprovedCount,
+
+COUNT(CASE WHEN Status='Rejected' THEN 1 END)
+    RejectedCount
+
+FROM Loans;
+
+--------------------------------------------------------
+-- WEEKLY APPLICATIONS
+--------------------------------------------------------
+
+SELECT
+
+FORMAT(StartDate,'ddd') Date,
+
+COUNT(*) Amount
+
+FROM Loans
+
+WHERE StartDate>=DATEADD(DAY,-6,CAST(GETDATE() AS DATE))
+
+GROUP BY
+FORMAT(StartDate,'ddd'),
+DATEPART(WEEKDAY,StartDate)
+
+ORDER BY
+DATEPART(WEEKDAY,StartDate);
+
+--------------------------------------------------------
+-- APPLICATION STATUS
+--------------------------------------------------------
+
+SELECT
+
+Status,
+
+COUNT(*) Count
+
+FROM Loans
+
+GROUP BY Status;
+
+--------------------------------------------------------
+-- MY APPLICATIONS
+--------------------------------------------------------
+
+SELECT TOP (5)
+
+l.LoanNumber,
+
+c.Name CustomerName,
+
+l.Principal,
+
+l.Status,
+
+l.StartDate
+
+FROM Loans l
+
+INNER JOIN Customers c
+ON l.CustomerId=c.Id
+
+ORDER BY l.StartDate DESC;
+
+--------------------------------------------------------
+-- PENDING APPROVALS
+--------------------------------------------------------
+
+SELECT TOP (5)
+
+l.LoanNumber,
+
+c.Name CustomerName,
+
+l.Principal,
+
+l.Status,
+
+l.StartDate
+
+FROM Loans l
+
+INNER JOIN Customers c
+ON l.CustomerId=c.Id
+
+WHERE l.Status='Pending'
+
+ORDER BY l.StartDate DESC;
+
+";
+
+        var dashboard = new LoanOfficerDashboardModel();
+
+        using var multi = await _connection.QueryMultipleAsync(sql);
+
+        dashboard = await multi.ReadSingleAsync<LoanOfficerDashboardModel>();
+
+        dashboard.WeeklyApplications =
+            (await multi.ReadAsync<CollectionTrendModel>()).ToList();
+
+        dashboard.ApplicationStatus =
+            (await multi.ReadAsync<LoanStatusChartModel>()).ToList();
+
+        dashboard.MyApplications =
+            (await multi.ReadAsync<RecentLoanModel>()).ToList();
+
+        dashboard.PendingApprovals =
+            (await multi.ReadAsync<RecentLoanModel>()).ToList();
+
+        return dashboard;
+    }
 }

@@ -7,6 +7,9 @@ public partial class DashboardHeader
     [Parameter]
     public EventCallback OnRefresh { get; set; }
 
+    [Parameter]
+    public string Title { get; set; } = "Loan Officer";
+
     protected string CurrentDate =>
         DateTime.Now.ToString("dddd, dd MMMM yyyy");
 

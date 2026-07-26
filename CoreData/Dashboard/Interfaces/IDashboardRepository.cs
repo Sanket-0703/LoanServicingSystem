@@ -5,4 +5,5 @@ namespace CoreData.Dashboard.Interfaces;
 public interface IDashboardRepository
 {
     Task<AdminDashboardModel> GetAdminDashboardAsync();
+    Task<LoanOfficerDashboardModel> GetLoanOfficerDashboardAsync();
 }
