@@ -1,93 +1,110 @@
 ﻿@namespace LoanServicingSystem.Components.Pages
 @using LoanServicingSystem.Components.Shared
 
-<div class="space-y-5">
+
+<div class="p-4 md:p-6 bg-slate-50 min-h-screen space-y-6 text-slate-800">
 
     <!-- Header -->
     <DashboardHeader OnRefresh="ReloadDashboard" />
 
-    <!-- KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <!-- ========================================== -->
+    <!-- TOP SECTION: 3-Part Grid (2:1 Ratio)       -->
+    <!-- ========================================== -->
+    <!-- Using md:grid-cols-3 divides the screen into 3 equal parts -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-        <StatCard IsLoading="@IsLoading"
-                  Title="Active Loans"
-                  Value="@Dashboard.ActiveLoanCount.ToString()"
-                  SubTitle="Currently Active">
+        <div class="md:col-span-2 flex flex-col gap-6">
 
-            <Icon>
-                <svg class="w-6 h-6"
-                     fill="none"
-                     stroke="currentColor"
-                     viewBox="0 0 24 24">
+            <!-- ROW 1: KPI Cards (2x2 Grid) -->
+            <div class="grid grid-cols-2 gap-4">
+                <StatCard IsLoading="@IsLoading" Title="ACTIVE LOANS" Value="@Dashboard.ActiveLoanCount.ToString()" SubTitle="Currently Active">
+                    <Icon><div class="p-2 bg-blue-50 text-blue-500 rounded text-xl">💼</div></Icon>
+                </StatCard>
+                <StatCard IsLoading="@IsLoading" Title="PORTFOLIO" Value="@Dashboard.TotalPortfolio.ToString("C0")" SubTitle="Outstanding Principal">
+                    <Icon><div class="p-2 bg-blue-50 text-blue-500 rounded text-xl">₹</div></Icon>
+                </StatCard>
+                <StatCard IsLoading="@IsLoading" Title="CUSTOMERS" Value="@Dashboard.CustomerCount.ToString()" SubTitle="Registered Customers">
+                    <Icon><div class="p-2 bg-blue-50 text-blue-500 rounded text-xl">👥</div></Icon>
+                </StatCard>
+                <StatCard IsLoading="@IsLoading" Title="COLLECTIONS TODAY" Value="@Dashboard.CollectionsToday.ToString("C0")" SubTitle="Today's Collection">
+                    <Icon><div class="p-2 bg-blue-50 text-blue-500 rounded text-xl">📈</div></Icon>
+                </StatCard>
+            </div>
 
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <!-- ROW 2: Portfolio Summary -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 w-full">
+                <PortfolioSummary Model="Dashboard.Portfolio" />
+            </div>
 
-                </svg>
-            </Icon>
+            <!-- ROW 3: Quick Actions -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 w-full">
+                <QuickActions Actions="QuickActionsList" />
+            </div>
 
-        </StatCard>
+        </div>
+        <div class="md:col-span-1 flex flex-col gap-6">
+            
+            <!-- Unified Parent Card "Clubbing" the charts together -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 h-full flex flex-col gap-6">
+                
+                <!-- ROW 1: Collections Trend Chart -->
+                <div class="flex-1">
+                   
+                    <div class="flex-1 flex flex-col w-full">
+                        <div class="flex-grow w-full h-full relative">
+                            <CollectionTrendChart Data="Dashboard.CollectionTrend" />
+                        </div>
+                    </div>
+                </div>
 
-        <StatCard IsLoading="@IsLoading"
-                  Title="Portfolio"
-                  Value="@Dashboard.TotalPortfolio.ToString("C0")"
-                  SubTitle="Outstanding Principal">
+                <!-- ROW 2: Loan Status Distribution Chart -->
+                <div class="flex-1">
+                    
+                    <div class="flex-1 flex flex-col w-full items-center">
+                        
+                        <div class="fflex-grow w-full h-full relative">
+                            <LoanStatusChart Data="Dashboard.LoanStatus" />
+                        </div>
+                    </div>
+                </div>
 
-            <Icon>💰</Icon>
-
-        </StatCard>
-
-        <StatCard IsLoading="@IsLoading"
-                  Title="Customers"
-                  Value="@Dashboard.CustomerCount.ToString()"
-                  SubTitle="Registered Customers">
-
-            <Icon>👥</Icon>
-
-        </StatCard>
-
-        <StatCard IsLoading="@IsLoading"
-                  Title="Collections Today"
-                  Value="@Dashboard.CollectionsToday.ToString("C0")"
-                  SubTitle="Today's Collection">
-
-            <Icon>📈</Icon>
-
-        </StatCard>
-
-    </div>
-
-    <!-- Portfolio + Quick Actions -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-
-        <PortfolioSummary Model="Dashboard.Portfolio" />
-
-        <QuickActions Actions="QuickActionsList" />
-
-    </div>
-
-    <!-- Charts -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
-
-        <div class="xl:col-span-2">
-            <CollectionTrendChart Data="Dashboard.CollectionTrend" />
+            </div>
+            
         </div>
 
-        <div>
-            <LoanStatusChart Data="Dashboard.LoanStatus" />
-        </div>
+        
 
     </div>
 
-    <!-- Tables -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
-        <RecentLoansTable Loans="Dashboard.RecentLoans" />
+    <div class="flex flex-col gap-6 pt-2">
 
-        <RecentPaymentsTable Payments="Dashboard.RecentPayments" />
+        <!-- Table 1: Recent Loans -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 w-full overflow-x-auto">
+            <h3 class="text-sm font-semibold text-slate-800 mb-4">Recent Loan Applications</h3>
+            <RecentLoansTable Loans="Dashboard.RecentLoans" />
+        </div>
+
+        <!-- Table 2: Recent Payments -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 w-full overflow-x-auto">
+            <h3 class="text-sm font-semibold text-slate-800 mb-4">Recent Payments</h3>
+            <RecentPaymentsTable Payments="Dashboard.RecentPayments" />
+        </div>
 
     </div>
 
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
