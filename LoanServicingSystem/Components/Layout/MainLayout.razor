@@ -45,6 +45,15 @@
                             </Authorized>
                         </AuthorizeView>
 
+                        <AuthorizeView Roles="Admin">
+                            <Authorized>
+                                <NavLink href="/loan-products"
+                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                    Loan Products
+                                </NavLink>
+                            </Authorized>
+                        </AuthorizeView>    
+
                         <AuthorizeView Roles="Admin,LoanOfficer,Auditor">
                             <Authorized>
                                 <NavLink href="/loans"

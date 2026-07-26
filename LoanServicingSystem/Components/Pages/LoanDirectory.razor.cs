@@ -57,8 +57,9 @@ namespace LoanServicingSystem.Components.Pages
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
                 query = query.Where(l =>
-                    l.LoanNumber.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
-                    l.CustomerName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase));
+       l.LoanNumber.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
+    || l.CustomerName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
+    || l.ProductName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrWhiteSpace(SelectedStatus))
@@ -78,5 +79,16 @@ namespace LoanServicingSystem.Components.Pages
             "Rejected" => "bg-rose-100 text-rose-800",
             _ => "bg-gray-100 text-gray-800"
         };
+
+        protected int TotalLoans => AllLoans.Count;
+
+        protected int ActiveLoans =>
+            AllLoans.Count(x => x.Status == "Disbursed");
+
+        protected int ApprovedLoans =>
+            AllLoans.Count(x => x.Status == "Approved");
+
+        protected decimal TotalPortfolio =>
+            AllLoans.Sum(x => x.Principal);
     }
 }

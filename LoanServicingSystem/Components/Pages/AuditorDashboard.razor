@@ -1,7 +1,61 @@
 ﻿@namespace LoanServicingSystem.Components.Pages
-<h1 class="text-3xl font-bold text-slate-800">
-    Auditor Dashboard
-</h1>
-@code {
+@using LoanServicingSystem.Components.Shared
 
-}
+<div class="space-y-5">
+
+    <DashboardHeader />
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+        <StatCard IsLoading="@IsLoading"
+                  Title="Total Loans"
+                  Value="@Dashboard.TotalLoans.ToString()"
+                  SubTitle="Loan Portfolio">
+            <Icon>🏦</Icon>
+        </StatCard>
+
+        <StatCard IsLoading="@IsLoading"
+                  Title="Active Loans"
+                  Value="@Dashboard.ActiveLoans.ToString()"
+                  SubTitle="Currently Active">
+            <Icon>✅</Icon>
+        </StatCard>
+
+        <StatCard IsLoading="@IsLoading"
+                  Title="Collections"
+                  Value="@Dashboard.TotalCollections.ToString("C0")"
+                  SubTitle="Total Collected">
+            <Icon>💰</Icon>
+        </StatCard>
+
+        <StatCard IsLoading="@IsLoading"
+                  Title="Audit Records"
+                  Value="@Dashboard.AuditRecordCount.ToString()"
+                  SubTitle="Recorded Changes">
+            <Icon>📋</Icon>
+        </StatCard>
+
+    </div>
+
+    <!-- Charts -->
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+        <LoanStatusChart Data="Dashboard.LoanStatus" />
+
+        <CollectionTrendChart Data="Dashboard.CollectionTrend" />
+
+    </div>
+
+    <!-- Audit Logs -->
+
+    <AuditTrailTable Title="Recent Audit Logs"
+                     Logs="Dashboard.RecentAuditLogs" />
+
+    <!-- Recent Loans -->
+
+    <RecentLoansTable Title="Recent Loans"
+                      Loans="Dashboard.RecentLoans" />
+
+</div>

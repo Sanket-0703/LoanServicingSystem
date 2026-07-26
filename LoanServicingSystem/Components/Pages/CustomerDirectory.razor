@@ -3,8 +3,67 @@
 @attribute [Authorize]
 @namespace LoanServicingSystem.Components.Pages
 @rendermode InteractiveServer
+@using LoanServicingSystem.Components.Shared
 
 <PageTitle>Customer Directory - Loan Servicing System</PageTitle>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+
+    <StatCard Title="Total Customers"
+              Value="@TotalCustomers.ToString()"
+              SubTitle="Registered Customers"
+              IsLoading="@IsLoading">
+
+        <Icon>
+            👥
+        </Icon>
+
+    </StatCard>
+
+    <StatCard Title="Verified KYC"
+              Value="@VerifiedCustomers.ToString()"
+              SubTitle="Verified Profiles"
+              IsLoading="@IsLoading"
+              ValueColor="text-emerald-600"
+              IconBackground="bg-emerald-100"
+              IconColor="text-emerald-600">
+
+        <Icon>
+            ✅
+        </Icon>
+
+    </StatCard>
+
+    <StatCard Title="Pending KYC"
+              Value="@PendingCustomers.ToString()"
+              SubTitle="Awaiting Approval"
+              IsLoading="@IsLoading"
+              ValueColor="text-amber-600"
+              IconBackground="bg-amber-100"
+              IconColor="text-amber-600">
+
+        <Icon>
+            ⏳
+        </Icon>
+
+    </StatCard>
+
+    <StatCard Title="Active Borrowers"
+              Value="@ActiveBorrowers.ToString()"
+              SubTitle="Customers with Loans"
+              IsLoading="@IsLoading"
+              ValueColor="text-blue-600"
+              IconBackground="bg-blue-100"
+              IconColor="text-blue-600">
+
+        <Icon>
+            🏦
+        </Icon>
+
+    </StatCard>
+
+</div>
+
 
 <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>

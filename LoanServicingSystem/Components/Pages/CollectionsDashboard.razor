@@ -1,8 +1,92 @@
-﻿@namespace LoanServicingSystem.Components.Pages
-<h1 class="text-3xl font-bold text-slate-800">
-    Collections Dashboard
-</h1>
+﻿@namespace LoanServicingSystem.Components.Dashboards
+@using LoanServicingSystem.Components.Shared
 
-@code {
+<div class="space-y-5">
 
-}
+    <DashboardHeader />
+
+    <!-- ======================================= -->
+    <!-- TOP SECTION -->
+    <!-- ======================================= -->
+
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+
+        <!-- LEFT -->
+
+        <div class="xl:col-span-5 space-y-5">
+
+            <div class="grid grid-cols-2 gap-4">
+
+                <StatCard IsLoading="@IsLoading"
+                          Title="Overdue Loans"
+                          Value="@Dashboard.OverdueLoanCount.ToString()"
+                          SubTitle="Past Due">
+
+                    <Icon>📋</Icon>
+
+                </StatCard>
+
+                <StatCard IsLoading="@IsLoading"
+                          Title="Due Today"
+                          Value="@Dashboard.DueTodayCount.ToString()"
+                          SubTitle="EMIs Due">
+
+                    <Icon>📅</Icon>
+
+                </StatCard>
+
+                <StatCard IsLoading="@IsLoading"
+                          Title="Collected Today"
+                          Value="@Dashboard.CollectedToday.ToString("C0")"
+                          SubTitle="Today's Collection">
+
+                    <Icon>💰</Icon>
+
+                </StatCard>
+
+                <StatCard IsLoading="@IsLoading"
+                          Title="Penalties"
+                          Value="@Dashboard.UnpaidPenaltyAmount.ToString("C0")"
+                          SubTitle="Unpaid Penalties">
+
+                    <Icon>⚠️</Icon>
+
+                </StatCard>
+
+            </div>
+
+            <QuickActions Actions="QuickActionsList" />
+
+        </div>
+
+        <!-- RIGHT -->
+
+        <div class="xl:col-span-7 space-y-5">
+
+            <CollectionTrendChart
+                Data="Dashboard.CollectionTrend" />
+
+            <LoanStatusChart
+                Data="Dashboard.OverdueStatus" />
+
+        </div>
+
+    </div>
+
+    <!-- ======================================= -->
+    <!-- TABLES -->
+    <!-- ======================================= -->
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+        <RecentLoansTable
+            Title="Overdue Loans"
+            Loans="Dashboard.OverdueLoans" />
+
+        <RecentPaymentsTable
+            Title="Today's Payments"
+            Payments="Dashboard.RecentPayments" />
+
+    </div>
+
+</div>

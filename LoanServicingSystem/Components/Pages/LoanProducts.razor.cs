@@ -116,5 +116,44 @@ namespace LoanServicingSystem.Components.Pages
                 IsSaving = false;
             }
         }
+
+        protected int TotalProducts => AllProducts.Count;
+
+        protected decimal AverageInterest =>
+            AllProducts.Any()
+                ? Math.Round(AllProducts.Average(x => x.InterestRate), 2)
+                : 0;
+
+        protected int MaximumTenure =>
+            AllProducts.Any()
+                ? AllProducts.Max(x => x.TenureMonths)
+                : 0;
+
+        protected decimal AverageFee =>
+            AllProducts.Any()
+                ? Math.Round(AllProducts.Average(x => x.ProcessingFee ?? 0), 2)
+                : 0;
+
+        protected string GetProductIcon(string name)
+        {
+            name = name.ToLower();
+
+            if (name.Contains("home"))
+                return "🏠";
+
+            if (name.Contains("vehicle"))
+                return "🚗";
+
+            if (name.Contains("education"))
+                return "🎓";
+
+            if (name.Contains("personal"))
+                return "💼";
+
+            if (name.Contains("business"))
+                return "🏢";
+
+            return "💳";
+        }
     }
 }

@@ -26,12 +26,6 @@ public partial class StatCard
     public RenderFragment? Icon { get; set; }
 
     [Parameter]
-    public string IconBackground { get; set; } = "bg-indigo-100";
-
-    [Parameter]
-    public string IconColor { get; set; } = "text-indigo-600";
-
-    [Parameter]
     public string TrendBackground { get; set; } = "bg-emerald-100";
 
     [Parameter]
@@ -39,6 +33,23 @@ public partial class StatCard
 
     [Parameter]
     public EventCallback OnClick { get; set; }
+
+    [Parameter] public string? CardColor { get; set; }
+
+
+
+
+
+    [Parameter] 
+    public bool ShowTrend { get; set; }
+    [Parameter]
+    public string ValueColor { get; set; } = "text-slate-800";
+
+    [Parameter]
+    public string IconBackground { get; set; } = "bg-indigo-100";
+
+    [Parameter]
+    public string IconColor { get; set; } = "text-indigo-600";
 
     protected async Task HandleClick()
     {

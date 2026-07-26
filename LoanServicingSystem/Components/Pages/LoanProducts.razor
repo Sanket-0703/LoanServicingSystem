@@ -2,18 +2,92 @@
 @attribute [Authorize(Roles = "Admin")]
 @namespace LoanServicingSystem.Components.Pages
 @rendermode InteractiveServer
+@using LoanServicingSystem.Components.Shared
 
 <PageTitle>Loan Products Configuration - Loan Servicing System</PageTitle>
 
 <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
     <div>
-        <h2 class="text-2xl font-bold text-slate-800">Loan Products Configuration</h2>
-        <p class="text-sm text-slate-500 mt-1">Define institutional loan templates, interest rate tiers, and processing fees.</p>
+
+        <h2 class="text-3xl font-bold text-slate-800">
+            Loan Products
+        </h2>
+
+        <p class="mt-1 text-sm text-slate-500">
+            Configure and manage loan product templates, interest rates, tenure and processing fees.
+        </p>
+
     </div>
-    <button @onclick="HandleCreateProduct" class="inline-flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
-        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-        Create Product Template
+
+    <button @onclick="HandleCreateProduct"
+            class="inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2.5 text-white font-medium shadow-sm hover:bg-indigo-700 transition">
+
+        <svg class="w-5 h-5 mr-2"
+             fill="none"
+             stroke="currentColor"
+             viewBox="0 0 24 24">
+
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4" />
+
+        </svg>
+
+        Create Product
+
     </button>
+
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+
+    <StatCard Title="Products"
+              Value="@TotalProducts.ToString()"
+              SubTitle="Configured Templates"
+              IsLoading="@IsLoading">
+
+        <Icon>📦</Icon>
+
+    </StatCard>
+
+    <StatCard Title="Avg Interest"
+              Value="@($"{AverageInterest}%")"
+              SubTitle="Annual Rate"
+              IsLoading="@IsLoading"
+              ValueColor="text-blue-600"
+              IconBackground="bg-blue-100"
+              IconColor="text-blue-600">
+
+        <Icon>📈</Icon>
+
+    </StatCard>
+
+    <StatCard Title="Max Tenure"
+              Value="@($"{MaximumTenure} M")"
+              SubTitle="Longest Duration"
+              IsLoading="@IsLoading"
+              ValueColor="text-emerald-600"
+              IconBackground="bg-emerald-100"
+              IconColor="text-emerald-600">
+
+        <Icon>📅</Icon>
+
+    </StatCard>
+
+    <StatCard Title="Avg Fee"
+              Value="@AverageFee.ToString("C")"
+              SubTitle="Processing Fee"
+              IsLoading="@IsLoading"
+              ValueColor="text-amber-600"
+              IconBackground="bg-amber-100"
+              IconColor="text-amber-600">
+
+        <Icon>💰</Icon>
+
+    </StatCard>
+
 </div>
 
 <!-- Products Grid -->
@@ -32,25 +106,95 @@ else
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @foreach (var product in AllProducts)
         {
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Configured</span>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-900 mb-1">@product.Name</h3>
+                    <div class="flex items-center gap-3 mb-4">
+
+                        <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-2xl">
+
+                            @GetProductIcon(product.Name)
+
+                        </div>
+
+                        <div>
+
+                            <h3 class="text-lg font-bold text-slate-900">
+
+                                @product.Name
+
+                            </h3>
+
+                            <p class="text-xs text-slate-500">
+
+                                Loan Product Template
+
+                            </p>
+
+                        </div>
+
+                    </div>
                     <p class="text-xs text-slate-500 mb-4 h-10 overflow-hidden">
                         @(string.IsNullOrWhiteSpace(product.PenaltyRules) ? "No penalty rules defined." : product.PenaltyRules)
                     </p>
 
-                    <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
-                        <div class="flex justify-between"><span class="text-slate-500">Interest Rate:</span> <span class="font-bold text-slate-900">@product.InterestRate.ToString("0.00")% / yr</span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Tenure:</span> <span class="font-bold text-slate-900">@product.TenureMonths Months</span></div>
-                        <div class="flex justify-between"><span class="text-slate-500">Processing Fee:</span> <span class="font-bold text-slate-900">@product.ProcessingFee.GetValueOrDefault().ToString("C")</span></div>
+                    <div class="grid grid-cols-3 gap-3 mt-5">
+
+                        <div class="bg-slate-50 rounded-lg p-3 text-center">
+
+                            <p class="text-xl font-bold text-indigo-600">
+
+                                @product.InterestRate%
+
+                            </p>
+
+                            <p class="text-xs text-slate-500">
+
+                                Interest
+
+                            </p>
+
+                        </div>
+
+                        <div class="bg-slate-50 rounded-lg p-3 text-center">
+
+                            <p class="text-xl font-bold text-emerald-600">
+
+                                @product.TenureMonths
+
+                            </p>
+
+                            <p class="text-xs text-slate-500">
+
+                                Months
+
+                            </p>
+
+                        </div>
+
+                        <div class="bg-slate-50 rounded-lg p-3 text-center">
+
+                            <p class="text-xl font-bold text-amber-600">
+
+                                @product.ProcessingFee?.ToString("C0")
+
+                            </p>
+
+                            <p class="text-xs text-slate-500">
+
+                                Fee
+
+                            </p>
+
+                        </div>
+
                     </div>
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-2">
-                    <button @onclick="() => HandleConfigureProduct(product.Id)" class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">Configure</button>
+                    <button @onclick="() => HandleConfigureProduct(product.Id)" class="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">⚙ Configure</button>
                 </div>
             </div>
         }

@@ -79,5 +79,16 @@ namespace LoanServicingSystem.Components.Pages
             "Rejected" => "bg-rose-100 text-rose-800",
             _ => "bg-slate-100 text-slate-800"
         };
+
+        protected int TotalCustomers => AllCustomers.Count;
+
+        protected int VerifiedCustomers =>
+            AllCustomers.Count(c => c.KycStatus == "Verified");
+
+        protected int PendingCustomers =>
+            AllCustomers.Count(c => c.KycStatus == "Pending");
+
+        protected int ActiveBorrowers =>
+            AllCustomers.Count(c => c.ActiveLoansCount > 0);
     }
 }

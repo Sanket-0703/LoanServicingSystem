@@ -6,4 +6,6 @@ public interface IDashboardRepository
 {
     Task<AdminDashboardModel> GetAdminDashboardAsync();
     Task<LoanOfficerDashboardModel> GetLoanOfficerDashboardAsync();
+    Task<CollectionsDashboardModel> GetCollectionsDashboardAsync();
+    Task<AuditorDashboardModel> GetAuditorDashboardAsync();
 }

@@ -765,3 +765,177 @@ from Deleted d;
 END
 GO
 
+USE LoanServicingSystem;
+GO
+
+--=========================================================
+-- Drop View
+--=========================================================
+
+IF OBJECT_ID('dbo.vw_AuditTrail', 'V') IS NOT NULL
+    DROP VIEW dbo.vw_AuditTrail;
+GO
+
+--=========================================================
+-- Create View
+--=========================================================
+
+CREATE VIEW dbo.vw_AuditTrail
+AS
+
+--=========================================================
+-- Roles
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Roles' AS Module,
+    ChangeType
+FROM dbo.RolesAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Users
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Users',
+    ChangeType
+FROM dbo.UsersAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Customers
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Customers',
+    ChangeType
+FROM dbo.CustomersAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Loan Products
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Loan Products',
+    ChangeType
+FROM dbo.LoanProductsAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Loans
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Loans',
+    ChangeType
+FROM dbo.LoansAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Disbursements
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Disbursements',
+    ChangeType
+FROM dbo.DisbursementsAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Repayment Schedules
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Repayment Schedules',
+    ChangeType
+FROM dbo.RepaymentSchedulesAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Payments
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Payments',
+    ChangeType
+FROM dbo.PaymentsAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Penalties
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Penalties',
+    ChangeType
+FROM dbo.PenaltiesAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Interest Accruals
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Interest Accruals',
+    ChangeType
+FROM dbo.InterestAccrualsAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Statements
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Statements',
+    ChangeType
+FROM dbo.StatementsAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Documents
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Documents',
+    ChangeType
+FROM dbo.DocumentsAuditTrail
+
+UNION ALL
+
+--=========================================================
+-- Notifications
+--=========================================================
+SELECT
+    ChangedOn,
+    ChangedBy,
+    'Notifications',
+    ChangeType
+FROM dbo.NotificationsAuditTrail;
+GO
+
+
