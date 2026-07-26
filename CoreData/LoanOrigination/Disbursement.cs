@@ -22,5 +22,34 @@ namespace CoreData.LoanOrigination
             var result = await connection.QueryAsync<Disbursement>(sql, new { LoanId = loanId });
             return result.ToList();
         }
+
+        public static async Task InsertAsync(IDatabaseConnection databaseConnection, Disbursement disbursement)
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            const string sql = @"
+        INSERT INTO [dbo].[Disbursements]
+        (
+            Id,
+            LoanId,
+            Principal,
+            BankAccount,
+            TransactionDate,
+            ReferenceNumber,
+            UpdatedBy
+        )
+        VALUES
+        (
+            @Id,
+            @LoanId,
+            @Principal,
+            @BankAccount,
+            @TransactionDate,
+            @ReferenceNumber,
+            @UpdatedBy
+        )";
+
+            await connection.ExecuteAsync(sql, disbursement);
+        }
     }
 }

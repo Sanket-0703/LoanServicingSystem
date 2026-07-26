@@ -82,13 +82,16 @@ namespace LoanServicingSystem.Components.Pages
 
         protected int TotalLoans => AllLoans.Count;
 
-        protected int ActiveLoans =>
-            AllLoans.Count(x => x.Status == "Disbursed");
+        protected int DraftLoans =>
+    AllLoans.Count(x => x.Status == "Draft");
 
         protected int ApprovedLoans =>
             AllLoans.Count(x => x.Status == "Approved");
 
-        protected decimal TotalPortfolio =>
-            AllLoans.Sum(x => x.Principal);
+        protected int DisbursedLoans =>
+            AllLoans.Count(x => x.Status == "Disbursed");
+
+
+
     }
 }

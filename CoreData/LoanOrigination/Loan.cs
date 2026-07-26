@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Data;
+using Dapper;
 using Dapper.Contrib.Extensions;
 
 namespace CoreData.LoanOrigination
@@ -42,6 +43,57 @@ namespace CoreData.LoanOrigination
 
             var result = await connection.QueryAsync<Loan>(sql);
             return result.ToList();
+        }
+
+        public static async Task ApproveAsync(
+    IDatabaseConnection databaseConnection,
+    Guid loanId,
+    string updatedBy)
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            await connection.ExecuteAsync(
+                "sp_ApproveLoan",
+                new
+                {
+                    LoanId = loanId,
+                    UpdatedBy = updatedBy
+                },
+                commandType: CommandType.StoredProcedure);
+        }
+
+        public static async Task RejectAsync(
+    IDatabaseConnection databaseConnection,
+    Guid loanId,
+    string updatedBy)
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            await connection.ExecuteAsync(
+                "sp_RejectLoan",
+                new
+                {
+                    LoanId = loanId,
+                    UpdatedBy = updatedBy
+                },
+                commandType: CommandType.StoredProcedure);
+        }
+
+        public static async Task DisburseAsync(
+    IDatabaseConnection databaseConnection,
+    Guid loanId,
+    string updatedBy)
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            await connection.ExecuteAsync(
+                "sp_DisburseLoan",
+                new
+                {
+                    LoanId = loanId,
+                    UpdatedBy = updatedBy
+                },
+                commandType: CommandType.StoredProcedure);
         }
 
         public static async Task OriginateLoanWithScheduleAsync(IDatabaseConnection databaseConnection, Loan loan)

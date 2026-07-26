@@ -3,6 +3,7 @@
 @attribute [Authorize]
 @namespace LoanServicingSystem.Components.Pages
 @rendermode InteractiveServer
+@using LoanServicingSystem.Components.Shared
 
 <PageTitle>Loan Details - Loan Servicing System</PageTitle>
 
@@ -22,59 +23,304 @@ else if (CurrentLoan == null)
 else
 {
     <!-- Top Navigation & Actions Header -->
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-3">
-                <a href="/loans" class="text-slate-400 hover:text-slate-600 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                </a>
-                <h2 class="text-2xl font-bold text-slate-800">Loan Account #@CurrentLoan.LoanNumber</h2>
-                <span class="px-2.5 py-1 text-xs font-semibold rounded-full @GetStatusBadgeClass(CurrentLoan.Status)">@CurrentLoan.Status</span>
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
+
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6">
+
+            <!-- LEFT -->
+
+            <div class="flex items-start gap-4">
+
+                <div class="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center text-3xl">
+
+                    🏦
+
+                </div>
+
+                <div>
+
+                    <p class="text-sm uppercase tracking-wider text-slate-500 font-semibold">
+
+                        Loan Account
+
+                    </p>
+
+                    <h1 class="text-3xl font-bold text-slate-900 mt-1">
+
+                        @CurrentLoan?.LoanNumber
+
+                    </h1>
+
+                    <div class="mt-3 flex flex-wrap items-center gap-3">
+
+                        <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-medium">
+
+                            👤 @CurrentLoan?.CustomerName
+
+                        </span>
+
+                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-medium">
+
+                            📦 @CurrentLoan?.ProductName
+
+                        </span>
+
+                        <span class="px-3 py-1 rounded-full @GetStatusBadgeClass(CurrentLoan?.Status ?? "") text-sm font-semibold">
+
+                            @CurrentLoan?.Status
+
+                        </span>
+
+                    </div>
+
+                </div>
+
             </div>
-            <p class="text-sm text-slate-500 mt-1 ml-8">Borrower: <span class="font-medium text-slate-700">@CurrentLoan.CustomerName</span> &bull; Product: <span class="font-medium text-slate-700">@CurrentLoan.ProductName</span></p>
+
+            <!-- RIGHT -->
+
+            <div class="flex flex-wrap justify-end gap-3">
+
+                @if (CurrentLoan?.Status == "Draft")
+                {
+                    <button class="px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition"
+                            @onclick="ApproveLoan">
+
+                        ✅ Approve
+
+                    </button>
+
+                    <button class="px-5 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
+                            @onclick="RejectLoan">
+
+                        ❌ Reject
+
+                    </button>
+                }
+
+                @if (CurrentLoan?.Status == "Approved")
+                {
+                    <button class="px-5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                            @onclick="DisburseLoan">
+
+                        💰 Disburse
+
+                    </button>
+                }
+
+                @if (CurrentLoan?.Status == "Disbursed")
+                {
+                    <a href="/payments/new/@CurrentLoan?.Id"
+                       class="px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition">
+
+                        💳 Record Payment
+
+                    </a>
+
+                    <a href="/statements/@CurrentLoan?.Id"
+                       class="px-5 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition">
+
+                        📄 Statement
+
+                    </a>
+                }
+
+            </div>
+
         </div>
 
-        <div class="flex items-center gap-3">
-            <a href="/loans/@CurrentLoan.Id/penalty" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition shadow-sm">
-                Apply Penalty
-            </a>
-            <a href="/loans/@CurrentLoan.Id/payment" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
-                Record Payment
-            </a>
-        </div>
     </div>
 
-    <!-- Quick Stat Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Principal Balance</div>
-            <div class="text-xl font-bold text-slate-900">@PrincipalBalance.ToString("C")</div>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Next EMI Due</div>
-            <div class="text-xl font-bold text-slate-900">@(NextEmiAmount > 0 ? NextEmiAmount.ToString("C") : "$0.00")</div>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Due Date</div>
-            <div class="text-xl font-bold text-slate-900">@(NextEmiDueDate.HasValue ? NextEmiDueDate.Value.ToString("MMM dd, yyyy") : "Completed")</div>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Paid</div>
-            <div class="text-xl font-bold text-emerald-600">@TotalPaid.ToString("C")</div>
-        </div>
+
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+
+        <StatCard Title="Outstanding"
+                  Value="@PrincipalBalance.ToString("C0")"
+                  SubTitle="Remaining Principal"
+                  IsLoading="@IsLoading"
+                  ValueColor="text-rose-600"
+                  IconBackground="bg-rose-100"
+                  IconColor="text-rose-600">
+
+            <Icon>🏦</Icon>
+
+        </StatCard>
+
+        <StatCard Title="Next EMI"
+                  Value="@(NextEmiAmount > 0 ? NextEmiAmount.ToString("C0") : "$0")"
+                  SubTitle="Upcoming Payment"
+                  IsLoading="@IsLoading"
+                  ValueColor="text-indigo-600"
+                  IconBackground="bg-indigo-100"
+                  IconColor="text-indigo-600">
+
+            <Icon>📅</Icon>
+
+        </StatCard>
+
+        <StatCard Title="Collections"
+                  Value="@TotalPaid.ToString("C0")"
+                  SubTitle="Amount Received"
+                  IsLoading="@IsLoading"
+                  ValueColor="text-emerald-600"
+                  IconBackground="bg-emerald-100"
+                  IconColor="text-emerald-600">
+
+            <Icon>💰</Icon>
+
+        </StatCard>
+
+        <StatCard Title="EMIs Paid"
+                  Value="@PaidCount.ToString()"
+                  SubTitle="@($"{PaidCount} of {CurrentLoan?.Tenure}")"
+                  IsLoading="@IsLoading"
+                  ValueColor="text-amber-600"
+                  IconBackground="bg-amber-100"
+                  IconColor="text-amber-600">
+
+            <Icon>✅</Icon>
+
+        </StatCard>
+
     </div>
 
+    <!-- Loan Lifecycle -->
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
+
+        <div class="flex items-center justify-between mb-6">
+
+            <h3 class="text-lg font-semibold text-slate-800">
+
+                Loan Lifecycle
+
+            </h3>
+
+            <span class="text-sm text-slate-500">
+
+                Current Status:
+                <span class="font-semibold">@CurrentLoan?.Status</span>
+
+            </span>
+
+        </div>
+
+        <div class="grid grid-cols-4 gap-4">
+
+            <!-- Draft -->
+
+            <div class="text-center">
+
+                <div class="mx-auto w-12 h-12 rounded-full flex items-center justify-center
+                 @(CurrentLoan?.Status=="Draft"
+                    ? "bg-amber-500 text-white"
+                    : "bg-slate-100 text-slate-500")">
+
+                    📝
+
+                </div>
+
+                <div class="mt-2 font-semibold">
+
+                    Draft
+
+                </div>
+
+            </div>
+
+            <!-- Approved -->
+
+            <div class="text-center">
+
+                <div class="mx-auto w-12 h-12 rounded-full flex items-center justify-center
+                 @((CurrentLoan?.Status=="Approved" || CurrentLoan?.Status=="Disbursed" || CurrentLoan?.Status=="Closed")
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-100 text-slate-500")">
+
+                    ✅
+
+                </div>
+
+                <div class="mt-2 font-semibold">
+
+                    Approved
+
+                </div>
+
+            </div>
+
+            <!-- Disbursed -->
+
+            <div class="text-center">
+
+                <div class="mx-auto w-12 h-12 rounded-full flex items-center justify-center
+                 @((CurrentLoan?.Status=="Disbursed" || CurrentLoan?.Status=="Closed")
+                    ? "bg-emerald-600 text-white"
+                    : "bg-slate-100 text-slate-500")">
+
+                    💰
+
+                </div>
+
+                <div class="mt-2 font-semibold">
+
+                    Disbursed
+
+                </div>
+
+            </div>
+
+            <!-- Closed -->
+
+            <div class="text-center">
+
+                <div class="mx-auto w-12 h-12 rounded-full flex items-center justify-center
+                 @(CurrentLoan?.Status=="Closed"
+                    ? "bg-purple-600 text-white"
+                    : "bg-slate-100 text-slate-500")">
+
+                    ✔
+
+                </div>
+
+                <div class="mt-2 font-semibold">
+
+                    Closed
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
     <!-- Tab Navigation -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="border-b border-slate-200 px-6 flex gap-8">
-            <button @onclick='() => ActiveTab = "overview"' class="py-4 text-sm font-semibold border-b-2 transition @(ActiveTab == "overview" ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-500 hover:text-slate-800")">
-                Overview Summary
+            <button @onclick='() => ActiveTab = "overview"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab=="overview" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+                Overview
             </button>
-            <button @onclick='() => ActiveTab = "amortization"' class="py-4 text-sm font-semibold border-b-2 transition @(ActiveTab == "amortization" ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-500 hover:text-slate-800")">
-                Amortization Schedule
+
+            <button @onclick='() => ActiveTab = "schedule"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab=="schedule" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+                Repayment Schedule
             </button>
-            <button @onclick='() => ActiveTab = "ledger"' class="py-4 text-sm font-semibold border-b-2 transition @(ActiveTab == "ledger" ? "border-indigo-600 text-indigo-600" : "border-transparent text-slate-500 hover:text-slate-800")">
-                Transaction Ledger History
+
+            <button @onclick='() => ActiveTab = "payments"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab=="payments" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+                Payments
+            </button>
+
+            <button @onclick='() => ActiveTab = "audit"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab=="audit" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+                Audit Trail
+            </button>
+
+            <button @onclick='() => ActiveTab = "ledger"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab=="ledger" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+                Ledger
             </button>
         </div>
 
@@ -82,70 +328,359 @@ else
         <div class="p-6">
             @if (ActiveTab == "overview")
             {
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <h3 class="font-semibold text-slate-800">Loan Terms Configuration</h3>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
-                            <div class="flex justify-between"><span class="text-slate-500">Approved Principal:</span> <span class="font-medium text-slate-900">@CurrentLoan.Principal.ToString("C")</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Annual Interest Rate:</span> <span class="font-medium text-slate-900">@CurrentLoan.InterestRate.ToString("0.00")%</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Tenure Term:</span> <span class="font-medium text-slate-900">@CurrentLoan.Tenure Months</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Repayment Frequency:</span> <span class="font-medium text-slate-900">@CurrentLoan.RepaymentFrequency</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Start Date:</span> <span class="font-medium text-slate-900">@(CurrentLoan.StartDate.HasValue ? CurrentLoan.StartDate.Value.ToString("MMM dd, yyyy") : "-")</span></div>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+                    <!-- Borrower Information -->
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+
+                        <div class="px-6 py-4 border-b border-slate-200">
+
+                            <h3 class="text-lg font-semibold text-slate-800">
+
+                                👤 Borrower Information
+
+                            </h3>
+
                         </div>
+
+                        <div class="p-6 space-y-5">
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">Customer</span>
+
+                                <span class="font-semibold">
+
+                                    @CurrentLoan?.CustomerName
+
+                                </span>
+
+                            </div>
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    Customer ID
+
+                                </span>
+
+                                <span class="font-mono text-sm">
+
+                                    @CurrentLoan?.CustomerId
+
+                                </span>
+
+                            </div>
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    Loan Number
+
+                                </span>
+
+                                <span class="font-semibold">
+
+                                    @CurrentLoan?.LoanNumber
+
+                                </span>
+
+                            </div>
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    Current Status
+
+                                </span>
+
+                                <span class="px-3 py-1 rounded-full @GetStatusBadgeClass(CurrentLoan?.Status ?? "")">
+
+                                    @CurrentLoan?.Status
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
-                    <div class="space-y-4">
-                        <h3 class="font-semibold text-slate-800">Account Health & Risk</h3>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 text-sm">
-                            <div class="flex justify-between"><span class="text-slate-500">Payment Consistency:</span> <span class="font-medium text-emerald-600">On Time (@PaidCount / @CurrentLoan.Tenure Paid)</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Days Past Due (DPD):</span> <span class="font-medium text-slate-900">0 Days</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Account Status:</span> <span class="font-medium text-slate-900">@CurrentLoan.Status</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Last Updated By:</span> <span class="font-medium text-slate-900">@(string.IsNullOrWhiteSpace(CurrentLoan.UpdatedBy) ? "System" : CurrentLoan.UpdatedBy)</span></div>
+                    <!-- Loan Information -->
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+
+                        <div class="px-6 py-4 border-b border-slate-200">
+
+                            <h3 class="text-lg font-semibold text-slate-800">
+
+                                📑 Loan Information
+
+                            </h3>
+
                         </div>
+
+                        <div class="p-6 space-y-5">
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    Product
+
+                                </span>
+
+                                <span class="font-semibold">
+
+                                    @CurrentLoan?.ProductName
+
+                                </span>
+
+                            </div>
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    Principal
+
+                                </span>
+
+                                <span class="font-semibold text-emerald-600">
+
+                                    @CurrentLoan?.Principal.ToString("C")
+
+                                </span>
+
+                            </div>
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    Interest Rate
+
+                                </span>
+
+                                <span>
+
+                                    @CurrentLoan?.InterestRate %
+
+                                </span>
+
+                            </div>
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    Tenure
+
+                                </span>
+
+                                <span>
+
+                                    @CurrentLoan?.Tenure Months
+
+                                </span>
+
+                            </div>
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    Repayment
+
+                                </span>
+
+                                <span>
+
+                                    @CurrentLoan?.RepaymentFrequency
+
+                                </span>
+
+                            </div>
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    Start Date
+
+                                </span>
+
+                                <span>
+
+                                    @(CurrentLoan?.StartDate?.ToString("dd MMM yyyy"))
+
+                                </span>
+
+                            </div>
+
+                            <div class="flex justify-between">
+
+                                <span class="text-slate-500">
+
+                                    End Date
+
+                                </span>
+
+                                <span>
+
+                                    @(CurrentLoan?.EndDate?.ToString("dd MMM yyyy"))
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
                     </div>
+
                 </div>
             }
-            else if (ActiveTab == "amortization")
+            else if (ActiveTab == "schedule")
             {
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
+
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-500">Installment #</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-500">Due Date</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-500">EMI Amount</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-500">Principal</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-500">Interest</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-500">Balance</th>
-                                <th class="px-4 py-3 text-center font-semibold text-slate-500">Status</th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Installment
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Due Date
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Principal
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Interest
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    EMI
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Outstanding
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Status
+
+                                </th>
+
                             </tr>
+
                         </thead>
                         <tbody class="divide-y divide-slate-200">
-                            @if (!ScheduleItems.Any())
+
+                            @foreach (var item in ScheduleItems)
                             {
-                                <tr>
-                                    <td colspan="7" class="px-4 py-6 text-center text-slate-500">No amortization schedule found for this loan.</td>
+                                var emi = item.Principal + item.Interest;
+
+                                bool overdue =
+                                item.Status != "Paid"
+                                && item.DueDate.Date < DateTime.Today;
+
+                                <tr class="hover:bg-slate-50 transition">
+
+                                    <td class="px-6 py-4">
+
+                                        <span class="font-semibold">
+
+                                            EMI @item.EmiNo
+
+                                        </span>
+
+                                    </td>
+
+                                    <td class="px-6 py-4">
+
+                                        @item.DueDate.ToString("dd MMM yyyy")
+
+                                    </td>
+
+                                    <td class="px-6 py-4 text-emerald-600 font-semibold">
+
+                                        @item.Principal.ToString("C")
+
+                                    </td>
+
+                                    <td class="px-6 py-4">
+
+                                        @item.Interest.ToString("C")
+
+                                    </td>
+
+                                    <td class="px-6 py-4 font-bold">
+
+                                        @emi.ToString("C")
+
+                                    </td>
+
+                                    <td class="px-6 py-4">
+
+                                        @item.Outstanding.ToString("C")
+
+                                    </td>
+
+                                    <td class="px-6 py-4">
+
+                                        @if (item.Status == "Paid")
+                                        {
+                                            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+
+                                                🟢 Paid
+
+                                            </span>
+                                        }
+                                        else if (overdue)
+                                        {
+                                            <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+
+                                                🔴 Overdue
+
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+
+                                                🟡 Pending
+
+                                            </span>
+                                        }
+
+                                    </td>
+
                                 </tr>
                             }
-                            else
-                            {
-                                @foreach (var item in ScheduleItems)
-                                {
-                                    <tr>
-                                        <td class="px-4 py-3 font-medium">@item.EmiNo</td>
-                                        <td class="px-4 py-3 text-slate-500">@item.DueDate.ToString("MMM dd, yyyy")</td>
-                                        <td class="px-4 py-3 text-right font-medium">@((item.Principal + item.Interest).ToString("C"))</td>
-                                        <td class="px-4 py-3 text-right text-slate-500">@item.Principal.ToString("C")</td>
-                                        <td class="px-4 py-3 text-right text-slate-500">@item.Interest.ToString("C")</td>
-                                        <td class="px-4 py-3 text-right text-slate-500">@item.Outstanding.ToString("C")</td>
-                                        <td class="px-4 py-3 text-center">
-                                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full @(item.Status == "Paid" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800")">
-                                                @item.Status
-                                            </span>
-                                        </td>
-                                    </tr>
-                                }
-                            }
+
                         </tbody>
                     </table>
                 </div>
@@ -155,38 +690,359 @@ else
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50">
+
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-500">Timestamp</th>
-                                <th class="px-4 py-3 text-left font-semibold text-slate-500">Transaction Type</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-500">Debit (-)</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-500">Credit (+)</th>
-                                <th class="px-4 py-3 text-right font-semibold text-slate-500">Running Balance</th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Date
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Transaction
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Debit
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Credit
+
+                                </th>
+
+                                <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+
+                                    Balance
+
+                                </th>
+
                             </tr>
+
                         </thead>
                         <tbody class="divide-y divide-slate-200">
-                            @if (!LedgerItems.Any())
+
+                            @foreach (var item in LedgerItems)
                             {
-                                <tr>
-                                    <td colspan="5" class="px-4 py-6 text-center text-slate-500">No transaction records found.</td>
+                                <tr class="hover:bg-slate-50 transition">
+
+                                    <td class="px-6 py-4 whitespace-nowrap">
+
+                                        @item.Timestamp.ToString("dd MMM yyyy")
+
+                                    </td>
+
+                                    <td class="px-6 py-4">
+
+                                        <div class="flex items-center gap-2">
+
+                                            @if (item.Debit.HasValue)
+                                            {
+                                                <span class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+
+                                                    ⬆️
+
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+
+                                                    ⬇️
+
+                                                </span>
+                                            }
+
+                                            <span class="font-medium">
+
+                                                @item.TransactionType
+
+                                            </span>
+
+                                        </div>
+
+                                    </td>
+
+                                    <td class="px-6 py-4">
+
+                                        @if (item.Debit.HasValue)
+                                        {
+                                            <span class="font-semibold text-red-600">
+
+                                                @item.Debit.Value.ToString("C")
+
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
+
+                                    </td>
+
+                                    <td class="px-6 py-4">
+
+                                        @if (item.Credit.HasValue)
+                                        {
+                                            <span class="font-semibold text-emerald-600">
+
+                                                @item.Credit.Value.ToString("C")
+
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
+
+                                    </td>
+
+                                    <td class="px-6 py-4">
+
+                                        <span class="font-bold text-indigo-700">
+
+                                            @item.RunningBalance.ToString("C")
+
+                                        </span>
+
+                                    </td>
+
                                 </tr>
                             }
-                            else
-                            {
-                                @foreach (var tx in LedgerItems)
-                                {
-                                    <tr>
-                                        <td class="px-4 py-3 text-slate-500">@tx.Timestamp.ToString("MMM dd, yyyy HH:mm tt")</td>
-                                        <td class="px-4 py-3 font-medium text-slate-900">@tx.TransactionType</td>
-                                        <td class="px-4 py-3 text-right text-slate-900">@(tx.Debit.HasValue ? tx.Debit.Value.ToString("C") : "-")</td>
-                                        <td class="px-4 py-3 text-right text-emerald-600">@(tx.Credit.HasValue ? tx.Credit.Value.ToString("C") : "-")</td>
-                                        <td class="px-4 py-3 text-right font-medium">@tx.RunningBalance.ToString("C")</td>
-                                    </tr>
-                                }
-                            }
+
                         </tbody>
                     </table>
                 </div>
             }
+            else if (ActiveTab == "payments")
+            {
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
+
+                    <div class="text-5xl mb-4">
+                        💳
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-slate-800">
+                        Payment History
+                    </h3>
+
+                    <p class="text-slate-500 mt-2">
+                        Payment history will be shown here after recording EMI payments.
+                    </p>
+
+                </div>
+            }
+            else if (ActiveTab == "audit")
+{
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
+
+        <div class="text-5xl mb-4">
+            📋
         </div>
+
+        <h3 class="text-xl font-semibold text-slate-800">
+            Audit Trail
+        </h3>
+
+        <p class="text-slate-500 mt-2">
+            Complete history of loan lifecycle changes will be displayed here.
+        </p>
+
+    </div>
+}
+        </div>
+    </div>
+}
+
+
+@if (ShowDisbursementModal)
+{
+    <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+
+            <div class="px-6 py-5 border-b">
+
+                <h2 class="text-xl font-bold">
+
+                    Disburse Loan
+
+                </h2>
+
+                <p class="text-slate-500 mt-1">
+
+                    Complete loan disbursement.
+
+                </p>
+
+            </div>
+
+            <div class="p-6 space-y-5">
+
+                <div>
+
+                    <label class="block text-sm font-medium mb-2">
+
+                        Disbursement Amount
+
+                    </label>
+
+                    <InputNumber @bind-Value="NewDisbursement.Principal"
+                                 class="w-full border rounded-lg px-4 py-3" />
+
+                </div>
+
+                <div>
+
+                    <label class="block text-sm font-medium mb-2">
+
+                        Bank Account
+
+                    </label>
+
+                    <InputText @bind-Value="NewDisbursement.BankAccount"
+                               class="w-full border rounded-lg px-4 py-3" />
+
+                </div>
+
+                <div>
+
+                    <label class="block text-sm font-medium mb-2">
+
+                        Reference Number
+
+                    </label>
+
+                    <InputText @bind-Value="NewDisbursement.ReferenceNumber"
+                               class="w-full border rounded-lg px-4 py-3" />
+
+                </div>
+
+                <div>
+
+                    <label class="block text-sm font-medium mb-2">
+
+                        Transaction Date
+
+                    </label>
+
+                    <InputDate @bind-Value="NewDisbursement.TransactionDate"
+                               class="w-full border rounded-lg px-4 py-3" />
+
+                </div>
+
+            </div>
+
+            <div class="px-6 py-5 border-t flex justify-end gap-3">
+
+                <button @onclick="CloseDisbursementModal"
+                        class="px-5 py-2 rounded-lg border">
+
+                    Cancel
+
+                </button>
+
+                <button @onclick="ConfirmDisbursement"
+                        class="px-5 py-2 rounded-lg bg-indigo-600 text-white">
+
+                    Confirm Disbursement
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@if (ShowConfirmationModal)
+{
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+
+            <div class="px-6 py-5 border-b">
+
+                <h2 class="text-xl font-bold text-slate-800">
+
+                    @ConfirmationTitle
+
+                </h2>
+
+            </div>
+
+            <div class="px-6 py-6">
+
+                <div class="flex items-start gap-4">
+
+                    <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+
+                        ⚠️
+
+                    </div>
+
+                    <div>
+
+                        <p class="text-slate-700">
+
+                            @ConfirmationMessage
+
+                        </p>
+
+                        @if (CurrentLoan != null)
+                        {
+                            <div class="mt-4 text-sm text-slate-500 space-y-1">
+
+                                <div>
+                                    <strong>Customer:</strong>
+                                    @CurrentLoan.CustomerName
+                                </div>
+
+                                <div>
+                                    <strong>Amount:</strong>
+                                    @CurrentLoan.Principal.ToString("C")
+                                </div>
+
+                                <div>
+                                    <strong>Status:</strong>
+                                    @CurrentLoan.Status
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="px-6 py-5 border-t flex justify-end gap-3">
+
+                <button class="px-5 py-2 rounded-lg border border-slate-300"
+                        @onclick="CloseConfirmationModal">
+
+                    Cancel
+
+                </button>
+
+                <button class="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                        @onclick="ExecuteConfirmation">
+
+                    Confirm
+
+                </button>
+
+            </div>
+
+        </div>
+
     </div>
 }

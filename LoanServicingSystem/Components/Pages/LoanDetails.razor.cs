@@ -24,6 +24,17 @@ namespace LoanServicingSystem.Components.Pages
         public decimal NextEmiAmount { get; set; }
         public DateTime? NextEmiDueDate { get; set; }
         public decimal TotalPaid { get; set; }
+
+        public bool ShowDisbursementModal { get; set; }
+
+        public bool ShowConfirmationModal { get; set; }
+
+        public string ConfirmationTitle { get; set; } = string.Empty;
+
+        public string ConfirmationMessage { get; set; } = string.Empty;
+
+        public Func<Task>? ConfirmationAction { get; set; }
+        public Disbursement NewDisbursement { get; set; } = new();
         public int PaidCount { get; set; }
 
         protected override async Task OnInitializedAsync()
@@ -160,6 +171,152 @@ namespace LoanServicingSystem.Components.Pages
             public string Type { get; set; } = string.Empty;
             public decimal? Debit { get; set; }
             public decimal? Credit { get; set; }
+        }
+
+        protected Task ApproveLoan()
+        {
+            ConfirmationTitle = "Approve Loan";
+
+            ConfirmationMessage =
+                $"Are you sure you want to approve loan '{CurrentLoan?.LoanNumber}'?";
+
+            ConfirmationAction = ConfirmApproveLoan;
+
+            ShowConfirmationModal = true;
+
+            return Task.CompletedTask;
+        }
+
+        private async Task ConfirmApproveLoan()
+        {
+            try
+            {
+                if (CurrentLoan == null || DatabaseConnection == null)
+                    return;
+
+                await Loan.ApproveAsync(
+                    DatabaseConnection,
+                    CurrentLoan.Id,
+                    "SystemAdmin");
+
+                ShowConfirmationModal = false;
+
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+
+                ErrorMessage = ex.ToString();
+
+                ShowConfirmationModal = false;
+
+                StateHasChanged();
+            }
+        }
+        protected Task RejectLoan()
+        {
+            ConfirmationTitle = "Reject Loan";
+
+            ConfirmationMessage =
+                $"Are you sure you want to reject loan '{CurrentLoan?.LoanNumber}'?";
+
+            ConfirmationAction = ConfirmRejectLoan;
+
+            ShowConfirmationModal = true;
+
+            return Task.CompletedTask;
+        }
+
+        private async Task ConfirmRejectLoan()
+        {
+            if (CurrentLoan == null || DatabaseConnection == null)
+                return;
+
+            await Loan.RejectAsync(
+                DatabaseConnection,
+                CurrentLoan.Id,
+                "SystemAdmin");
+
+            ShowConfirmationModal = false;
+
+            await LoadDataAsync();
+        }
+
+        protected Task DisburseLoan()
+        {
+            if (CurrentLoan == null)
+                return Task.CompletedTask;
+
+            NewDisbursement = new Disbursement
+            {
+                LoanId = CurrentLoan.Id,
+                Principal = CurrentLoan.Principal,
+                TransactionDate = DateTime.Now
+            };
+
+            ShowDisbursementModal = true;
+
+            return Task.CompletedTask;
+        }
+
+        protected void CloseDisbursementModal()
+        {
+            ShowDisbursementModal = false;
+        }
+
+        protected async Task ExecuteConfirmation()
+        {
+            if (ConfirmationAction != null)
+            {
+                await ConfirmationAction();
+            }
+        }
+
+        protected void CloseConfirmationModal()
+        {
+            ShowConfirmationModal = false;
+        }
+
+        protected async Task ConfirmDisbursement()
+        {
+            if (DatabaseConnection == null || CurrentLoan == null)
+                return;
+
+            try
+            {
+                NewDisbursement.Id = Guid.NewGuid();
+                NewDisbursement.UpdatedBy = "SystemAdmin";
+
+                if (string.IsNullOrWhiteSpace(NewDisbursement.BankAccount))
+                {
+                    ErrorMessage = "Bank Account is required.";
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(NewDisbursement.ReferenceNumber))
+                {
+                    ErrorMessage = "Reference Number is required.";
+                    return;
+                }
+
+                await Disbursement.InsertAsync(
+                    DatabaseConnection,
+                    NewDisbursement);
+
+                await Loan.DisburseAsync(
+                    DatabaseConnection,
+                    CurrentLoan.Id,
+                    "SystemAdmin");
+
+                ShowDisbursementModal = false;
+
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
         }
 
         public class LedgerTransactionItem

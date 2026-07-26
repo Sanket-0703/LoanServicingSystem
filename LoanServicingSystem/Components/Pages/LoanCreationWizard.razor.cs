@@ -17,6 +17,52 @@ namespace LoanServicingSystem.Components.Pages
         public List<Customer> Customers { get; set; } = new();
         public List<LoanProduct> LoanProducts { get; set; } = new();
 
+
+
+        protected Customer? SelectedCustomer =>
+    Customers.FirstOrDefault(x => x.Id == NewLoan.CustomerId);
+
+        protected LoanProduct? SelectedProduct =>
+            LoanProducts.FirstOrDefault(x => x.Id == NewLoan.ProductId);
+
+        protected int CurrentStep { get; set; } = 1;
+
+        protected void NextStep()
+        {
+            if (CurrentStep == 1)
+            {
+                if (NewLoan.CustomerId == Guid.Empty ||
+                    NewLoan.ProductId == Guid.Empty)
+                {
+                    ErrorMessage = "Please select customer and product.";
+                    return;
+                }
+            }
+
+            if (CurrentStep == 2)
+            {
+                if (NewLoan.Principal <= 0 ||
+                    NewLoan.Tenure <= 0)
+                {
+                    ErrorMessage = "Enter valid loan amount and tenure.";
+                    return;
+                }
+            }
+
+            ErrorMessage = null;
+
+            if (CurrentStep < 3)
+                CurrentStep++;
+        }
+
+        protected void PreviousStep()
+        {
+            ErrorMessage = null;
+
+            if (CurrentStep > 1)
+                CurrentStep--;
+        }
+
         public Loan NewLoan { get; set; } = new Loan
         {
             Status = "Draft",
