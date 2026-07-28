@@ -3,6 +3,7 @@
 @attribute [Authorize]
 @namespace LoanServicingSystem.Components.Pages
 @rendermode InteractiveServer
+@using LoanServicingSystem.Components.Shared
 
 <PageTitle>Record Payment - Loan Servicing System</PageTitle>
 
@@ -24,6 +25,52 @@
 }
 else
 {
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+    <StatCard
+        Title="Current Due"
+        Value="@CurrentDueAmount.ToString("C")"
+        SubTitle="Next EMI"
+        IsLoading="@IsLoading"
+        ValueColor="text-red-600">
+
+        <Icon>💳</Icon>
+
+    </StatCard>
+
+    <StatCard
+        Title="Payment Date"
+        Value="@PaymentForm.PaymentDate.ToString("dd MMM")"
+        SubTitle="Posting Date"
+        IsLoading="@IsLoading"
+        ValueColor="text-indigo-600">
+
+        <Icon>📅</Icon>
+
+    </StatCard>
+
+    <StatCard
+        Title="Payment Mode"
+        Value="@PaymentForm.Mode"
+        SubTitle="Collection Channel"
+        IsLoading="@IsLoading">
+
+        <Icon>🏦</Icon>
+
+    </StatCard>
+
+    <StatCard
+        Title="Borrower"
+        Value="@BorrowerName"
+        SubTitle="@LoanNumber"
+        IsLoading="@IsLoading">
+
+        <Icon>👤</Icon>
+
+    </StatCard>
+
+</div>
     <EditForm Model="@PaymentForm" OnValidSubmit="@SubmitPaymentAsync">
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
@@ -32,7 +79,7 @@ else
             </div>
         }
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 max-w-8xl mx-auto overflow-hidden">
 
             <!-- Account Summary Banner -->
             <div class="bg-slate-50 px-8 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -53,10 +100,10 @@ else
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Payment Type</label>
                         <InputSelect @bind-Value="PaymentForm.PaymentType" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
-                            <option value="Standard EMI Installment">Standard EMI Installment</option>
-                            <option value="Late Penalty Clearance">Late Penalty Clearance</option>
-                            <option value="Lump-Sum Principal Prepayment">Lump-Sum Principal Prepayment</option>
-                            <option value="Full Account Closure">Full Account Closure</option>
+                            <option value="Standard EMI Installment">Regular EMI</option>
+                            <option value="Late Penalty Clearance">Part Payment</option>
+                            <option value="Lump-Sum Principal Prepayment">Penalty Payment</option>
+                            <option value="Full Account Closure">Foreclosure</option>
                         </InputSelect>
                     </div>
 
@@ -67,20 +114,62 @@ else
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Payment Method</label>
-                        <InputSelect @bind-Value="PaymentForm.Mode" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
-                            <option value="Bank Wire Transfer (NEFT/RTGS)">Bank Wire Transfer (NEFT/RTGS)</option>
-                            <option value="UPI / Instant Digital Gateway">UPI / Instant Digital Gateway</option>
-                            <option value="ACH / Direct Debit">ACH / Direct Debit</option>
-                            <option value="Cash Deposit">Cash Deposit</option>
-                        </InputSelect>
-                    </div>
+
+                    <!-- Payment Method -->
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Transaction Reference / UTR #</label>
-                        <InputText @bind-Value="PaymentForm.ReferenceNumber" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition" placeholder="e.g. UTR992837410" />
+
+                        <label class="block text-sm font-medium text-slate-700 mb-1">
+
+                            Payment Method
+
+                        </label>
+
+                        <InputSelect @bind-Value="PaymentForm.Mode"
+                                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg">
+
+                            <option>Bank Transfer</option>
+                            <option>UPI</option>
+                            <option>Cheque</option>
+                            <option>Cash</option>
+
+                        </InputSelect>
+
                     </div>
+
+                    <!-- Payment Date -->
+
+                    <div>
+
+                        <label class="block text-sm font-medium text-slate-700 mb-1">
+
+                            Payment Date
+
+                        </label>
+
+                        <InputDate @bind-Value="PaymentForm.PaymentDate"
+                                   class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg" />
+
+                    </div>
+
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 mt-6">
+
+                    <div>
+
+                        <label class="block text-sm font-medium text-slate-700 mb-1">
+
+                            Transaction Reference / UTR #
+
+                        </label>
+
+                        <InputText @bind-Value="PaymentForm.ReferenceNumber"
+                                   class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg"
+                                   placeholder="e.g. UTR992837410" />
+
+                    </div>
+
                 </div>
 
                 <div>
@@ -88,11 +177,82 @@ else
                     <InputTextArea @bind-Value="PaymentForm.Remarks" rows="3" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition resize-none" placeholder="Optional notes regarding receipt verification..."></InputTextArea>
                 </div>
 
-                <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-emerald-900 text-sm flex items-start gap-3">
-                    <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <div>
-                        <span class="font-semibold">Ledger Update Notice:</span> Submitting this form will automatically update the running principal balance, post the credit entry to the ledger, and mark the corresponding schedule installment as paid.
+                <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-6">
+
+                    <h3 class="font-semibold text-indigo-800 mb-5">
+
+                        Payment Preview
+
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-5">
+
+                        <div>
+
+                            <p class="text-sm text-slate-500">
+
+                                Amount Received
+
+                            </p>
+
+                            <p class="text-2xl font-bold text-indigo-700">
+
+                                @PaymentForm.Amount.ToString("C")
+
+                            </p>
+
+                        </div>
+
+                        <div>
+
+                            <p class="text-sm text-slate-500">
+
+                                Payment Type
+
+                            </p>
+
+                            <p class="font-semibold">
+
+                                @PaymentForm.PaymentType
+
+                            </p>
+
+                        </div>
+
+                        <div>
+
+                            <p class="text-sm text-slate-500">
+
+                                Mode
+
+                            </p>
+
+                            <p class="font-semibold">
+
+                                @PaymentForm.Mode
+
+                            </p>
+
+                        </div>
+
+                        <div>
+
+                            <p class="text-sm text-slate-500">
+
+                                Loan
+
+                            </p>
+
+                            <p class="font-semibold">
+
+                                @LoanNumber
+
+                            </p>
+
+                        </div>
+
                     </div>
+
                 </div>
 
             </div>

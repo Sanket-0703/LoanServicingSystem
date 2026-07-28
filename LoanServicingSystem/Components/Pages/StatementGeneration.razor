@@ -4,6 +4,7 @@
 @namespace LoanServicingSystem.Components.Pages
 @rendermode InteractiveServer
 @using CoreData.Servicing
+@using LoanServicingSystem.Components.Shared
 
 <PageTitle>Statement Generation - Loan Servicing System</PageTitle>
 
@@ -18,6 +19,49 @@
 }
 else
 {
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+
+    <StatCard Title="Outstanding"
+              Value="@(StatementData?.Metadata.Principal.ToString("C") ?? "$0")"
+              SubTitle="Current Balance"
+              IsLoading="@IsGenerating"
+              ValueColor="text-red-600">
+
+        <Icon>🏦</Icon>
+
+    </StatCard>
+
+    <StatCard Title="Principal"
+              Value="@(StatementData?.Metadata.Principal.ToString("C") ?? "$0")"
+              SubTitle="Loan Amount"
+              IsLoading="@IsGenerating"
+              ValueColor="text-blue-600">
+
+        <Icon>💰</Icon>
+
+    </StatCard>
+
+    <StatCard Title="Interest Rate"
+              Value="@(StatementData?.Metadata.InterestRate.ToString("0.00") + "%" ?? "0%")"
+              SubTitle="Annual Rate"
+              IsLoading="@IsGenerating"
+              ValueColor="text-amber-600">
+
+        <Icon>📈</Icon>
+
+    </StatCard>
+
+    <StatCard Title="Transactions"
+              Value="@(StatementData?.Rows.Count.ToString() ?? "0")"
+              SubTitle="Within Period"
+              IsLoading="@IsGenerating"
+              ValueColor="text-emerald-600">
+
+        <Icon>📄</Icon>
+
+    </StatCard>
+
+</div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- Statement Parameters Form -->
@@ -37,9 +81,9 @@ else
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Statement Type</label>
                 <select @bind="StatementType" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
-                    <option value="Full Account Ledger Statement">Full Account Ledger Statement</option>
-                    <option value="Interest Certificate (Tax)">Interest Certificate (Tax)</option>
-                    <option value="NOC (No Dues Certificate)">NOC (No Dues Certificate)</option>
+                    <option>Account Statement</option>
+                    <option>Interest Certificate</option>
+                    <option>No Due Certificate</option>
                 </select>
             </div>
 
@@ -82,6 +126,44 @@ else
                     </div>
                 </div>
 
+                <div class="mb-5 flex justify-between items-center">
+
+                    <div>
+
+                        <h3 class="text-lg font-semibold">
+
+                            @StatementType
+
+                        </h3>
+
+                        <p class="text-sm text-slate-500">
+
+                            @StartDate.ToString("dd MMM yyyy")
+                            -
+                            @EndDate.ToString("dd MMM yyyy")
+
+                        </p>
+
+                    </div>
+
+                    <div class="text-right">
+
+                        <div class="text-xs text-slate-500">
+
+                            Generated On
+
+                        </div>
+
+                        <div class="font-semibold">
+
+                            @DateTime.Now.ToString("dd MMM yyyy HH:mm")
+
+                        </div>
+
+                    </div>
+
+                </div>
+
                 @if (StatementData != null)
                 {
                     <div class="py-6 grid grid-cols-2 gap-4 text-sm">
@@ -122,9 +204,24 @@ else
                                         <tr>
                                             <td class="px-4 py-2 text-slate-500">@row.Timestamp.ToString("MMM dd, yyyy")</td>
                                             <td class="px-4 py-2 font-medium">@row.TransactionType</td>
-                                            <td class="px-4 py-2 text-right">@(row.Debit.HasValue ? row.Debit.Value.ToString("C") : "-")</td>
+                                            <td class="px-4 py-2 text-right">
+                                                @if (row.Debit.HasValue)
+                                                {
+                                                    <span class="font-semibold text-red-600">
+                                                        @row.Debit.Value.ToString("C")
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span>-</span>
+                                                }
+                                            </td>
                                             <td class="px-4 py-2 text-right text-emerald-600">@(row.Credit.HasValue ? row.Credit.Value.ToString("C") : "-")</td>
-                                            <td class="px-4 py-2 text-right font-medium">@row.RunningBalance.ToString("C")</td>
+                                            <td class="px-4 py-2 text-right font-medium">
+                                                <span class="font-bold text-indigo-700">
+                                                    @row.RunningBalance.ToString("C")
+                                                </span>
+                                            </td>
                                         </tr>
                                     }
                                 }
@@ -140,12 +237,22 @@ else
                 }
             </div>
 
+            <div class="mt-6 rounded-xl bg-slate-50 border border-slate-200 p-4">
+
+                <p class="text-sm text-slate-600">
+
+                    This statement is system generated and summarizes all loan
+                    transactions for the selected reporting period.
+
+                </p>
+
+            </div>
             <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <button class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition">
-                    Export CSV
+                    Export Excel
                 </button>
                 <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
-                    Download Official PDF
+                    Generate PDF Statement
                 </button>
             </div>
         </div>

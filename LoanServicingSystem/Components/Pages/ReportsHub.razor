@@ -3,6 +3,7 @@
 @attribute [Authorize]
 @namespace LoanServicingSystem.Components.Pages
 @rendermode InteractiveServer
+@using LoanServicingSystem.Components.Shared
 
 <PageTitle>Reports Hub - Loan Servicing System</PageTitle>
 
@@ -10,7 +11,52 @@
     <h2 class="text-2xl font-bold text-slate-800">Reports Hub</h2>
     <p class="text-sm text-slate-500 mt-1">Generate, view, and export compliance, financial, and portfolio performance reports.</p>
 </div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
 
+    <StatCard
+        Title="Reports"
+        Value="@TotalReports.ToString()"
+        SubTitle="Generated"
+        IsLoading="@IsGenerating">
+
+        <Icon>📊</Icon>
+
+    </StatCard>
+
+    <StatCard
+        Title="Today's Reports"
+        Value="@TodayReports.ToString()"
+        SubTitle="Current Day"
+        IsLoading="@IsGenerating"
+        ValueColor="text-emerald-600">
+
+        <Icon>📅</Icon>
+
+    </StatCard>
+
+    <StatCard
+        Title="CSV Exports"
+        Value="@CsvReports.ToString()"
+        SubTitle="Downloads"
+        IsLoading="@IsGenerating"
+        ValueColor="text-blue-600">
+
+        <Icon>📁</Icon>
+
+    </StatCard>
+
+    <StatCard
+        Title="Scheduled"
+        Value="@ScheduledReports.ToString()"
+        SubTitle="Auto Generated"
+        IsLoading="@IsGenerating"
+        ValueColor="text-amber-600">
+
+        <Icon>🤖</Icon>
+
+    </StatCard>
+
+</div>
 <!-- Report Categories Grid -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 
@@ -24,7 +70,7 @@
             <p class="text-xs text-slate-500 mb-4">Regulatory breakdown of delinquent accounts flagged for asset classification.</p>
         </div>
         <button @onclick="GenerateNpaReportAsync" disabled="@IsGenerating" class="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-medium rounded-lg border border-slate-200 disabled:opacity-50 transition">
-            @(IsGenerating ? "Processing..." : "Generate Report")
+            @(IsGenerating ? "Processing..." : "Export CSV →")
         </button>
     </div>
 
@@ -34,11 +80,11 @@
             <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg w-fit mb-4">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
             </div>
-            <h3 class="font-bold text-slate-900 text-lg mb-1">Interest Earned & Accrual</h3>
+            <h3 class="font-bold text-slate-900 text-lg mb-1">Interest Revenue Report</h3>
             <p class="text-xs text-slate-500 mb-4">Aggregated interest revenue accrued across active personal, vehicle, and business tiers.</p>
         </div>
         <button @onclick="GenerateInterestReportAsync" disabled="@IsGenerating" class="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-medium rounded-lg border border-slate-200 disabled:opacity-50 transition">
-            @(IsGenerating ? "Processing..." : "Generate Report")
+            @(IsGenerating ? "Processing..." : "Export CSV →")
         </button>
     </div>
 
@@ -48,11 +94,11 @@
             <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg w-fit mb-4">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012-2m-6 9l2 2 4-4"></path></svg>
             </div>
-            <h3 class="font-bold text-slate-900 text-lg mb-1">Daily Collection Reconciliation</h3>
+            <h3 class="font-bold text-slate-900 text-lg mb-1">Collections Report</h3>
             <p class="text-xs text-slate-500 mb-4">Transaction logs matching ledger payments against bank deposits for day-end closure.</p>
         </div>
         <button @onclick="GenerateCollectionsReportAsync" disabled="@IsGenerating" class="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-medium rounded-lg border border-slate-200 disabled:opacity-50 transition">
-            @(IsGenerating ? "Processing..." : "Generate Report")
+            @(IsGenerating ? "Processing..." : "Export CSV →")
         </button>
     </div>
 
@@ -60,7 +106,7 @@
 
 <!-- Recent Exports Table -->
 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-    <h3 class="text-lg font-bold text-slate-800 mb-4">Recent Generated Exports</h3>
+    <h3 class="text-lg font-bold text-slate-800 mb-4">Recent Report Activity</h3>
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50">
@@ -76,7 +122,10 @@
                 @if (!RecentReports.Any())
                 {
                     <tr>
-                        <td colspan="5" class="px-4 py-6 text-center text-slate-500">No reports generated in this session.</td>
+                        <td colspan="5" class="px-4 py-6 text-center text-slate-500">
+                            No reports have been generated yet.
+                            Generate your first report using one of the report cards above.
+                        </td>
                     </tr>
                 }
                 else
@@ -91,9 +140,22 @@
                                 <span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">@report.Format</span>
                             </td>
                             <td class="px-4 py-3 text-right font-medium text-emerald-600">
-                                <span class="flex items-center justify-end">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    Delivered
+                                <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+
+                                    <svg class="w-4 h-4 mr-1"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         viewBox="0 0 24 24">
+
+                                        <path stroke-linecap="round"
+                                              stroke-linejoin="round"
+                                              stroke-width="2"
+                                              d="M5 13l4 4L19 7" />
+
+                                    </svg>
+
+                                    Completed
+
                                 </span>
                             </td>
                         </tr>

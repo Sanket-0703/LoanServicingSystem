@@ -1,6 +1,9 @@
 ﻿@inherits LayoutComponentBase
 @using System.Linq
 @using System.Security.Claims
+@using CoreData
+@using CoreData.Identity
+
 
 <div class="p-4"
      @onclick="CloseProfileMenu">
@@ -116,9 +119,15 @@
 
                 <div class="flex items-center gap-4">
 
-                    <button class="relative p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors">
+                    <NavLink href="/notifications"
+                             class="relative p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors">
 
-                        <span class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                        @if (UnreadCount > 0)
+                        {
+                            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                @UnreadCount
+                            </span>
+                        }
 
                         <svg class="w-6 h-6"
                              fill="none"
@@ -129,10 +138,9 @@
                                   stroke-linejoin="round"
                                   stroke-width="2"
                                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-
                         </svg>
 
-                    </button>
+                    </NavLink>
 
                     <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
@@ -162,7 +170,49 @@
 
 </div>
 
-@code {
+@code{
+    [Inject]
+    private IDatabaseConnection? DatabaseConnection { get; set; }
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+    // Notification Count
+    public int UnreadCount { get; set; }
+
+    // Logged-in User Information
+    public Guid CurrentUserId { get; private set; }
+
+    public string CurrentUsername { get; private set; } = string.Empty;
+
+    public string CurrentUserRole { get; private set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            CurrentUserId = Users.GetCurrentUserId(authState.User);
+            CurrentUsername = Users.GetCurrentUsername(authState.User);
+            CurrentUserRole = Users.GetCurrentUserRole(authState.User);
+
+            await LoadUnreadNotifications();
+        }
+    }
+
+    private async Task LoadUnreadNotifications()
+    {
+        if (DatabaseConnection == null)
+            return;
+
+        UnreadCount = await Notification.GetUnreadCountAsync(
+            DatabaseConnection,
+            CurrentUserId);
+
+        StateHasChanged();
+    }
 
     private bool showProfileMenu;
 
@@ -175,5 +225,4 @@
     {
         showProfileMenu = false;
     }
-
 }

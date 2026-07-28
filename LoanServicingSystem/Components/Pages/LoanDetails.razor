@@ -110,7 +110,7 @@ else
 
                 @if (CurrentLoan?.Status == "Disbursed")
                 {
-                    <a href="/payments/new/@CurrentLoan?.Id"
+                    <a href="/loans/@CurrentLoan?.Id/payment"
                        class="px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition">
 
                         💳 Record Payment

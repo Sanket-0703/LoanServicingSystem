@@ -1,40 +1,86 @@
 ﻿using CoreData;
+using CoreData.Dashboard.Models;
 using Microsoft.AspNetCore.Components;
-using static CoreData.Identity.Users;
 
 namespace LoanServicingSystem.Components.Pages
 {
     public partial class AuditTrail : ComponentBase
     {
-        [Inject] private IDatabaseConnection? DatabaseConnection { get; set; }
+        [Inject]
+        private IDatabaseConnection? DatabaseConnection { get; set; }
 
         public bool IsLoading { get; set; } = true;
 
-        private List<SystemAuditLog> AllLogs { get; set; } = new();
-        public List<SystemAuditLog> FilteredLogs { get; set; } = new();
+        private List<AuditTrailModel> AllLogs { get; set; } = new();
+
+        public List<AuditTrailModel> FilteredLogs { get; set; } = new();
 
         private string _searchTerm = string.Empty;
         public string SearchTerm
         {
             get => _searchTerm;
-            set { _searchTerm = value; ApplyFilters(); }
+            set
+            {
+                _searchTerm = value;
+                ApplyFilters();
+            }
         }
 
-        private string _selectedSeverity = "All Severity Levels";
-        public string SelectedSeverity
+        private string _selectedModule = "All Modules";
+        public string SelectedModule
         {
-            get => _selectedSeverity;
-            set { _selectedSeverity = value; ApplyFilters(); }
+            get => _selectedModule;
+            set
+            {
+                _selectedModule = value;
+                ApplyFilters();
+            }
         }
+
+        private string _selectedChangeType = "All Changes";
+        public string SelectedChangeType
+        {
+            get => _selectedChangeType;
+            set
+            {
+                _selectedChangeType = value;
+                ApplyFilters();
+            }
+        }
+
+        #region KPI Cards
+
+        protected int TotalChanges =>
+            AllLogs.Count;
+
+        protected int TodayChanges =>
+            AllLogs.Count(x => x.ChangedOn.Date == DateTime.Today);
+
+        protected int InsertCount =>
+            AllLogs.Count(x =>
+                x.ChangeType.Equals("Insert", StringComparison.OrdinalIgnoreCase));
+
+        protected int UpdateCount =>
+            AllLogs.Count(x =>
+                x.ChangeType.Equals("Update", StringComparison.OrdinalIgnoreCase));
+
+        protected int DeleteCount =>
+            AllLogs.Count(x =>
+                x.ChangeType.Equals("Delete", StringComparison.OrdinalIgnoreCase));
+
+        #endregion
 
         protected override async Task OnInitializedAsync()
         {
             IsLoading = true;
+
             try
             {
                 if (DatabaseConnection != null)
                 {
-                    AllLogs = await SystemAuditLog.GetLogsAsync(DatabaseConnection);
+
+                    AllLogs = await AuditTrailModel.GetAuditTrailAsync(DatabaseConnection);
+
                     ApplyFilters();
                 }
             }
@@ -47,33 +93,52 @@ namespace LoanServicingSystem.Components.Pages
 
         private void ApplyFilters()
         {
-            var query = AllLogs.AsEnumerable();
+            IEnumerable<AuditTrailModel> query = AllLogs;
 
-            if (SelectedSeverity != "All Severity Levels")
+            if (SelectedModule != "All Modules")
             {
-                query = query.Where(l => l.Severity.Equals(SelectedSeverity, StringComparison.OrdinalIgnoreCase));
+                query = query.Where(x =>
+                    x.Module.Equals(SelectedModule,
+                    StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (SelectedChangeType != "All Changes")
+            {
+                query = query.Where(x =>
+                    x.ChangeType.Equals(SelectedChangeType,
+                    StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrWhiteSpace(SearchTerm))
             {
-                var lowerSearch = SearchTerm.ToLowerInvariant();
-                query = query.Where(l =>
-                    l.ActorName.ToLowerInvariant().Contains(lowerSearch) ||
-                    l.ActorEmail.ToLowerInvariant().Contains(lowerSearch) ||
-                    l.EventAction.ToLowerInvariant().Contains(lowerSearch) ||
-                    l.IpAddress.ToLowerInvariant().Contains(lowerSearch));
+                query = query.Where(x =>
+
+                       x.ChangedBy.Contains(SearchTerm,
+                            StringComparison.OrdinalIgnoreCase)
+
+                    || x.Module.Contains(SearchTerm,
+                            StringComparison.OrdinalIgnoreCase)
+
+                    || x.RecordId.Contains(SearchTerm,
+                            StringComparison.OrdinalIgnoreCase)
+
+                    || x.ChangeType.Contains(SearchTerm,
+                            StringComparison.OrdinalIgnoreCase));
             }
 
-            FilteredLogs = query.ToList();
+            FilteredLogs = query
+                .OrderByDescending(x => x.ChangedOn)
+                .ToList();
         }
 
-        protected string GetSeverityBadgeClass(string severity)
+        protected string GetChangeTypeBadgeClass(string changeType)
         {
-            return severity.ToLowerInvariant() switch
+            return changeType.ToLower() switch
             {
-                "critical" => "bg-red-100 text-red-800",
-                "warning" => "bg-amber-100 text-amber-800",
-                _ => "bg-blue-100 text-blue-800"
+                "insert" => "bg-emerald-100 text-emerald-700",
+                "update" => "bg-blue-100 text-blue-700",
+                "delete" => "bg-rose-100 text-rose-700",
+                _ => "bg-slate-100 text-slate-700"
             };
         }
     }

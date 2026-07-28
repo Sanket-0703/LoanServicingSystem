@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Security.Claims;
+using Dapper;
 using Dapper.Contrib.Extensions;
 using DocumentFormat.OpenXml.Spreadsheet;
 
@@ -131,37 +132,23 @@ namespace CoreData.Identity
             await connection.ExecuteAsync(sql, new { Id = userId, IsActive = isActive, UpdatedBy = updatedBy });
         }
 
-
-
-        public class SystemAuditLog
+        public static Guid GetCurrentUserId(ClaimsPrincipal user)
         {
-            public DateTime Timestamp { get; set; }
-            public string ActorName { get; set; } = string.Empty;
-            public string ActorEmail { get; set; } = string.Empty;
-            public string EventAction { get; set; } = string.Empty;
-            public string Severity { get; set; } = string.Empty;
-            public string IpAddress { get; set; } = string.Empty;
+            var id = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            public static async Task<List<SystemAuditLog>> GetLogsAsync(IDatabaseConnection databaseConnection)
-            {
-                using var connection = databaseConnection.GetConnection();
-
-                // This will now execute directly. If the table doesn't exist, it will fail loudly (as requested!)
-                const string sql = @"
-                SELECT TOP 100
-                    a.Timestamp,
-                    ISNULL(u.FirstName + ' ' + u.LastName, 'System') AS ActorName,
-                    ISNULL(u.Email, 'system@local') AS ActorEmail,
-                    a.Action AS EventAction,
-                    a.Severity,
-                    a.IpAddress
-                FROM [dbo].[AuditLogs] a
-                LEFT JOIN [dbo].[Users] u ON a.UserId = u.Id
-                ORDER BY a.Timestamp DESC";
-
-                var logs = await connection.QueryAsync<SystemAuditLog>(sql);
-                return logs.ToList();
-            }
+            return Guid.Parse(id!);
         }
+
+        public static string GetCurrentUsername(ClaimsPrincipal user)
+        {
+            return user.Identity?.Name ?? "System";
+        }
+
+        public static string GetCurrentUserRole(ClaimsPrincipal user)
+        {
+            return user.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+        }
+
+
     }
 }

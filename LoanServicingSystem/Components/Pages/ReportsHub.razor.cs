@@ -1,11 +1,8 @@
-﻿using CoreData;
+﻿using System.Text;
+using CoreData;
 using CoreData.Servicing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LoanServicingSystem.Components.Pages
 {
@@ -17,6 +14,17 @@ namespace LoanServicingSystem.Components.Pages
         public bool IsGenerating { get; set; } = false;
 
         public List<GeneratedReportLog> RecentReports { get; set; } = new();
+
+        public int TotalReports => RecentReports.Count;
+
+        public int CsvReports =>
+            RecentReports.Count(x => x.Format == "CSV");
+
+        public int TodayReports =>
+            RecentReports.Count(x => x.Timestamp.Date == DateTime.Today);
+
+        public int ScheduledReports =>
+            RecentReports.Count(x => x.GeneratedBy == "System Schedule");
 
         protected override void OnInitialized()
         {

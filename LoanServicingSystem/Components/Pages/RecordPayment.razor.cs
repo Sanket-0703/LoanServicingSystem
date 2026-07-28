@@ -89,7 +89,7 @@ namespace LoanServicingSystem.Components.Pages
                 {
                     Id = Guid.NewGuid(),
                     LoanId = LoanId,
-                    PaymentDate = DateTime.UtcNow,
+                    PaymentDate = PaymentForm.PaymentDate,
                     Amount = PaymentForm.Amount,
                     Mode = PaymentForm.Mode,
                     ReferenceNumber = PaymentForm.ReferenceNumber,
