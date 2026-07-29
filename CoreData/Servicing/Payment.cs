@@ -16,7 +16,48 @@ namespace CoreData.Servicing
         public string? Remarks { get; set; }
         public string? PaymentType { get; set; }
         public string? UpdatedBy { get; set; }
+        [Computed]
+        public string LoanNumber { get; set; } = string.Empty;
 
+        [Computed]
+        public string BorrowerName { get; set; } = string.Empty;
+
+        [Computed]
+        public decimal CurrentDueAmount { get; set; }
+
+        public static async Task<Payment?> GetPaymentScreenDataAsync(
+    IDatabaseConnection databaseConnection,
+    Guid loanId)
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            const string sql = @"
+    SELECT
+        l.LoanNumber,
+        c.Name AS BorrowerName,
+
+        (
+            SELECT TOP 1
+                (Principal + Interest)
+            FROM RepaymentSchedules
+            WHERE LoanId = @LoanId
+              AND Status <> 'Paid'
+            ORDER BY EmiNo
+        ) AS CurrentDueAmount
+
+    FROM Loans l
+    INNER JOIN Customers c
+        ON l.CustomerId = c.Id
+
+    WHERE l.Id = @LoanId";
+
+            return await connection.QueryFirstOrDefaultAsync<Payment>(
+                sql,
+                new
+                {
+                    LoanId = loanId
+                });
+        }
         public static async Task<List<Payment>> GetByLoanIdAsync(IDatabaseConnection databaseConnection, Guid loanId)
         {
             using var connection = databaseConnection.GetConnection();

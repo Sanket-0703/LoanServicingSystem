@@ -8,34 +8,56 @@
 
 @if (IsLoading)
 {
+    <!-- ========================================= -->
+    <!-- Loading State -->
+    <!-- ========================================= -->
+
     <div class="flex justify-center items-center h-96">
+
         <div class="text-slate-500 text-lg">
             Loading Dashboard...
         </div>
+
     </div>
 }
 else
 {
+    <!-- ========================================= -->
+    <!-- Role-Based Dashboard -->
+    <!-- ========================================= -->
+
     @switch (CurrentRole)
     {
         case "Admin":
+
             <AdminDashboard />
+
             break;
 
         case "LoanOfficer":
+
             <LoanOfficerDashboard />
+
             break;
 
         case "CollectionsAgent":
+
             <CollectionsDashboard />
+
             break;
 
         case "Auditor":
+
             <AuditorDashboard />
+
             break;
 
         default:
+
+            <!-- Unknown Role -->
+
             <div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+
                 <h3 class="text-xl font-bold text-red-700">
                     Unknown Role
                 </h3>
@@ -43,7 +65,9 @@ else
                 <p class="text-red-500 mt-2">
                     Your account doesn't have a valid role assigned.
                 </p>
+
             </div>
+
             break;
     }
 }

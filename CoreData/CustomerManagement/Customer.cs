@@ -18,7 +18,7 @@ namespace CoreData.CustomerManagement
         public string? EmploymentType { get; set; }
         public decimal? Income { get; set; }
         public int? CreditScore { get; set; }
-        public string? UpdatedBy { get; set; }
+        public Guid? CreatedBy { get; set; }
 
 
 
@@ -40,19 +40,16 @@ namespace CoreData.CustomerManagement
 
 
 
-        public static async Task<List<Customer>> GetAllWithActiveLoanCountAsync(IDatabaseConnection databaseConnection)
+        public static async Task<List<Customer>> GetAllCustomerUderLoanOfficer(IDatabaseConnection databaseConnection, Guid LoanofficerId)
         {
             using var connection = databaseConnection.GetConnection();
 
 
             const string sql = @"
-                SELECT 
-                    c.*,
-                    (SELECT COUNT(*) FROM [dbo].[Loans] l WHERE l.CustomerId = c.Id AND l.Status NOT IN ('Closed', 'Rejected', 'Draft')) AS ActiveLoansCount
-                FROM [dbo].[Customers] c
-                ORDER BY c.Name";
+                SELECT * FROM Customers c
+where c.CreatedBy=@LoanofficerId";
 
-            var result = await connection.QueryAsync<Customer>(sql);
+            var result = await connection.QueryAsync<Customer>(sql, new { LoanofficerId });
             return result.ToList();
         }
 
@@ -67,8 +64,8 @@ namespace CoreData.CustomerManagement
             using var connection = databaseConnection.GetConnection();
             const string sql = @"
                 INSERT INTO [dbo].[Customers] 
-                (Id, Name, Email, Phone, Address, PAN, Aadhaar, BusinessName, EmploymentType, Income, CreditScore, UpdatedBy)
-                VALUES (@Id, @Name, @Email, @Phone, @Address, @PAN, @Aadhaar, @BusinessName, @EmploymentType, @Income, @CreditScore, @UpdatedBy)";
+                (Id, Name, Email, Phone, Address, PAN, Aadhaar, BusinessName, EmploymentType, Income, CreditScore, CreatedBy)
+                VALUES (@Id, @Name, @Email, @Phone, @Address, @PAN, @Aadhaar, @BusinessName, @EmploymentType, @Income, @CreditScore, @CreatedBy)";
             await connection.ExecuteAsync(sql, customer);
         }
 
@@ -80,7 +77,7 @@ namespace CoreData.CustomerManagement
                 SET Name = @Name, Email = @Email, Phone = @Phone, Address = @Address, 
                     PAN = @PAN, Aadhaar = @Aadhaar, BusinessName = @BusinessName, 
                     EmploymentType = @EmploymentType, Income = @Income, 
-                    CreditScore = @CreditScore, UpdatedBy = @UpdatedBy
+                    CreditScore = @CreditScore, CreatedBy = @CreatedBy
                 WHERE Id = @Id";
             await connection.ExecuteAsync(sql, customer);
         }

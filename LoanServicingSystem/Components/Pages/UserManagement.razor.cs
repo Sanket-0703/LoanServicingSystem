@@ -2,70 +2,121 @@
 using CoreData.Identity;
 using Microsoft.AspNetCore.Components;
 
-
 namespace LoanServicingSystem.Components.Pages
 {
     public partial class UserManagement : ComponentBase
     {
+        // =========================================
+        // Dependency Injection
+        // =========================================
+
         [Inject]
         private IDatabaseConnection? DatabaseConnection { get; set; }
 
+        // =========================================
+        // Page State
+        // =========================================
+
         public bool IsLoading { get; set; } = true;
 
-        private List<CoreData.Identity.Users> AllUsers { get; set; } = new();
-        public List<Roles> AvailableRoles { get; set; } = new();
-
         public bool ShowSidebar { get; set; } = false;
+
         public bool IsUpdate { get; set; } = false;
+
         public bool IsSaving { get; set; } = false;
+
         public string? ModalErrorMessage { get; set; }
 
-        public CoreData.Identity.Users ActiveUser { get; set; } = new();
+        // =========================================
+        // Data Collections
+        // =========================================
 
-        // Search & Filter state
+        private List<Users> AllUsers { get; set; } = new();
+
+        public IEnumerable<Users> FilteredUsers { get; set; } = Array.Empty<Users>();
+
+        public List<Roles> AvailableRoles { get; set; } = new();
+
+        public Users ActiveUser { get; set; } = new();
+
+        // =========================================
+        // Search & Filters
+        // =========================================
+
         private string _searchTerm = string.Empty;
+
         public string SearchTerm
         {
             get => _searchTerm;
-            set { _searchTerm = value; ApplyFilters(); }
+            set
+            {
+                _searchTerm = value;
+                ApplyFilters();
+            }
         }
 
         private string _selectedRoleFilter = string.Empty;
+
         public string SelectedRoleFilter
         {
             get => _selectedRoleFilter;
-            set { _selectedRoleFilter = value; ApplyFilters(); }
+            set
+            {
+                _selectedRoleFilter = value;
+                ApplyFilters();
+            }
         }
 
-        public IEnumerable<CoreData.Identity.Users> FilteredUsers { get; set; } = Array.Empty<CoreData.Identity.Users>();
+        // =========================================
+        // Lifecycle Methods
+        // =========================================
 
+        /// <summary>
+        /// Loads users and available roles
+        /// when the page is initialized.
+        /// </summary>
         protected override async Task OnInitializedAsync()
         {
             await LoadDataAsync();
         }
 
+        // =========================================
+        // Data Loading
+        // =========================================
+
+        /// <summary>
+        /// Retrieves users and roles from the database.
+        /// </summary>
         private async Task LoadDataAsync()
         {
             IsLoading = true;
+
             try
             {
                 if (DatabaseConnection != null)
                 {
-                    AllUsers = await CoreData.Identity.Users.GetAllUsersWithRolesAsync(DatabaseConnection);
+                    AllUsers = await Users.GetAllUsersWithRolesAsync(DatabaseConnection);
+
                     AvailableRoles = await Roles.GetAllRolesAsync(DatabaseConnection);
+
                     ApplyFilters();
                 }
             }
             finally
             {
                 IsLoading = false;
+
                 StateHasChanged();
             }
         }
 
+        /// <summary>
+        /// Applies search and role filters
+        /// to the user list.
+        /// </summary>
         private void ApplyFilters()
         {
-            var query = AllUsers.AsEnumerable();
+            IEnumerable<Users> query = AllUsers;
 
             if (!string.IsNullOrWhiteSpace(SearchTerm))
             {
@@ -76,90 +127,130 @@ namespace LoanServicingSystem.Components.Pages
 
             if (!string.IsNullOrWhiteSpace(SelectedRoleFilter))
             {
-                query = query.Where(u => u.RoleName == SelectedRoleFilter);
+                query = query.Where(u =>
+                    u.RoleName == SelectedRoleFilter);
             }
 
             FilteredUsers = query.ToList();
         }
 
-        // --- UI Action Handlers ---
+        // =========================================
+        // Sidebar Actions
+        // =========================================
 
+        /// <summary>
+        /// Opens the sidebar for creating
+        /// a new user.
+        /// </summary>
         protected void HandleInviteUser()
         {
             IsUpdate = false;
+
             ModalErrorMessage = null;
-            ActiveUser = new CoreData.Identity.Users(); // Fresh entity
+
+            ActiveUser = new Users();
+
             ShowSidebar = true;
+
             StateHasChanged();
         }
 
+        /// <summary>
+        /// Opens the sidebar for editing
+        /// an existing user's role.
+        /// </summary>
         protected void HandleEditRole(Guid userId)
         {
             var user = AllUsers.FirstOrDefault(u => u.Id == userId);
-            if (user != null)
+
+            if (user == null)
+                return;
+
+            IsUpdate = true;
+
+            ModalErrorMessage = null;
+
+            // Clone the entity to avoid updating
+            // the grid before saving.
+            ActiveUser = new Users
             {
-                IsUpdate = true;
-                ModalErrorMessage = null;
-                // Clone the essential properties to avoid modifying the grid item directly before save
-                ActiveUser = new CoreData.Identity.Users
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    RoleId = user.RoleId
-                };
-                ShowSidebar = true;
-            }
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                RoleId = user.RoleId
+            };
+
+            ShowSidebar = true;
         }
 
+        /// <summary>
+        /// Closes the user sidebar.
+        /// </summary>
         protected void CloseSidebar()
         {
             ShowSidebar = false;
         }
 
+        // =========================================
+        // Save Operations
+        // =========================================
+
+        /// <summary>
+        /// Creates a new user or updates
+        /// an existing user's role.
+        /// </summary>
         protected async Task SaveUserAsync()
         {
             ModalErrorMessage = null;
 
-            // Manual C# validation since we removed the DataAnnotations
+            // Validate required fields
             if (string.IsNullOrWhiteSpace(ActiveUser.Username) ||
                 string.IsNullOrWhiteSpace(ActiveUser.Email) ||
                 ActiveUser.RoleId == Guid.Empty)
             {
                 ModalErrorMessage = "Please fill in all required fields.";
+
                 return;
             }
 
             IsSaving = true;
+
             try
             {
-                if (DatabaseConnection == null) throw new Exception("Database connection missing.");
+                if (DatabaseConnection == null)
+                    throw new Exception("Database connection missing.");
 
                 if (IsUpdate)
                 {
-                    // Update existing user's role
-                    await CoreData.Identity.Users.UpdateUserRoleAsync(DatabaseConnection, ActiveUser.Id, ActiveUser.RoleId, "SystemAdmin");
+                    await Users.UpdateUserRoleAsync(
+                        DatabaseConnection,
+                        ActiveUser.Id,
+                        ActiveUser.RoleId,
+                        "SystemAdmin");
                 }
                 else
                 {
-                    // Validate password for new users
+                    // Temporary password is required
                     if (string.IsNullOrWhiteSpace(ActiveUser.PasswordHash))
                     {
                         ModalErrorMessage = "A temporary password is required for new users.";
+
                         IsSaving = false;
+
                         return;
                     }
 
-                    // Complete the entity setup before inserting
                     ActiveUser.Id = Guid.NewGuid();
                     ActiveUser.IsActive = true;
                     ActiveUser.UpdatedBy = "SystemAdmin";
 
-                    await CoreData.Identity.Users.InsertUserAsync(DatabaseConnection, ActiveUser);
+                    await Users.InsertUserAsync(
+                        DatabaseConnection,
+                        ActiveUser);
                 }
 
-                // Close sidebar and refresh grid
                 ShowSidebar = false;
+
                 await LoadDataAsync();
             }
             catch (Exception ex)
@@ -171,25 +262,50 @@ namespace LoanServicingSystem.Components.Pages
                 IsSaving = false;
             }
         }
+
+        /// <summary>
+        /// Enables or disables a user account.
+        /// </summary>
         protected async Task HandleToggleStatus(Guid userId)
         {
-            if (DatabaseConnection == null) return;
+            if (DatabaseConnection == null)
+                return;
+
             var user = AllUsers.FirstOrDefault(u => u.Id == userId);
-            if (user != null)
-            {
-                await CoreData.Identity.Users.ToggleUserStatusAsync(DatabaseConnection, userId, !user.IsActive, "SystemAdmin");
-                await LoadDataAsync(); // Refresh grid
-            }
+
+            if (user == null)
+                return;
+
+            await Users.ToggleUserStatusAsync(
+                DatabaseConnection,
+                userId,
+                !user.IsActive,
+                "SystemAdmin");
+
+            await LoadDataAsync();
         }
 
-        // --- UI Helper Methods ---
+        // =========================================
+        // UI Helpers
+        // =========================================
 
+        /// <summary>
+        /// Returns initials for the avatar.
+        /// </summary>
         protected string GetInitials(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)) return "U";
-            return name.Length >= 2 ? name.Substring(0, 2).ToUpper() : name.ToUpper();
+            if (string.IsNullOrWhiteSpace(name))
+                return "U";
+
+            return name.Length >= 2
+                ? name[..2].ToUpper()
+                : name.ToUpper();
         }
 
+        /// <summary>
+        /// Returns the badge color
+        /// based on the user's role.
+        /// </summary>
         protected string GetRoleBadgeColor(string roleName)
         {
             return roleName switch
@@ -201,6 +317,10 @@ namespace LoanServicingSystem.Components.Pages
             };
         }
 
+        /// <summary>
+        /// Returns the avatar color
+        /// based on the user's role.
+        /// </summary>
         protected string GetAvatarColor(string roleName)
         {
             return roleName switch
@@ -211,7 +331,5 @@ namespace LoanServicingSystem.Components.Pages
                 _ => "bg-slate-100 text-slate-700"
             };
         }
-
-
     }
 }

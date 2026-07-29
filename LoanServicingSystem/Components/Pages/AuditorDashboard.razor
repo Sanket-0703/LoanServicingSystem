@@ -3,9 +3,16 @@
 
 <div class="space-y-5">
 
+    <!-- ========================================= -->
+    <!-- Dashboard Header -->
+    <!-- ========================================= -->
+
     <DashboardHeader />
 
+    <!-- ========================================= -->
     <!-- KPI Cards -->
+    <!-- ========================================= -->
+
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
         <StatCard IsLoading="@IsLoading"
@@ -38,7 +45,9 @@
 
     </div>
 
-    <!-- Charts -->
+    <!-- ========================================= -->
+    <!-- Dashboard Charts -->
+    <!-- ========================================= -->
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
@@ -48,12 +57,16 @@
 
     </div>
 
-    <!-- Audit Logs -->
+    <!-- ========================================= -->
+    <!-- Recent Audit Logs -->
+    <!-- ========================================= -->
 
     <AuditTrailTable Title="Recent Audit Logs"
                      Logs="Dashboard.RecentAuditLogs" />
 
+    <!-- ========================================= -->
     <!-- Recent Loans -->
+    <!-- ========================================= -->
 
     <RecentLoansTable Title="Recent Loans"
                       Loans="Dashboard.RecentLoans" />

@@ -5,13 +5,28 @@ namespace LoanServicingSystem.Components.Pages;
 
 public partial class AuditorDashboard : ComponentBase
 {
+    // =========================================
+    // Dependency Injection
+    // =========================================
+
     [Inject]
     public IDashboardRepository DashboardRepository { get; set; } = default!;
+
+    // =========================================
+    // Dashboard Data
+    // =========================================
 
     protected AuditorDashboardModel Dashboard { get; set; } = new();
 
     protected bool IsLoading { get; set; } = true;
 
+    // =========================================
+    // Lifecycle Methods
+    // =========================================
+
+    /// <summary>
+    /// Loads auditor dashboard metrics when the page is initialized.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         try

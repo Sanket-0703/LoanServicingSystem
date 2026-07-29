@@ -1,66 +1,95 @@
 ﻿using CoreData;
 using CoreData.Servicing;
-using Dapper;
 using Microsoft.AspNetCore.Components;
 
 namespace LoanServicingSystem.Components.Pages
 {
     public partial class RecordPayment : ComponentBase
     {
-        [Inject] private IDatabaseConnection? DatabaseConnection { get; set; }
-        [Inject] private NavigationManager? NavigationManager { get; set; }
+        // =========================================
+        // Dependency Injection
+        // =========================================
 
-        [Parameter] public Guid LoanId { get; set; }
+        [Inject]
+        private IDatabaseConnection? DatabaseConnection { get; set; }
+
+        [Inject]
+        private NavigationManager? NavigationManager { get; set; }
+
+        // =========================================
+        // Route Parameters
+        // =========================================
+
+        [Parameter]
+        public Guid LoanId { get; set; }
+
+        // =========================================
+        // Page State
+        // =========================================
 
         public bool IsLoading { get; set; } = true;
-        public bool IsSaving { get; set; } = false;
+
+        public bool IsSaving { get; set; }
+
         public string? ErrorMessage { get; set; }
 
+        // =========================================
+        // Loan Information
+        // =========================================
+
         public string LoanNumber { get; set; } = string.Empty;
+
         public string BorrowerName { get; set; } = string.Empty;
-        public decimal CurrentDueAmount { get; set; } = 0;
+
+        public decimal CurrentDueAmount { get; set; }
+
+        // =========================================
+        // Payment Form
+        // =========================================
 
         public PaymentModel PaymentForm { get; set; } = new();
 
+        // =========================================
+        // Lifecycle Methods
+        // =========================================
+
+        /// <summary>
+        /// Loads loan information and initializes
+        /// the payment form.
+        /// </summary>
         protected override async Task OnInitializedAsync()
         {
             IsLoading = true;
+
             try
             {
                 if (DatabaseConnection != null)
                 {
-                    using var connection = DatabaseConnection.GetConnection();
+                    var paymentData = await Payment.GetPaymentScreenDataAsync(
+                        DatabaseConnection,
+                        LoanId);
 
-                    // Fetch Loan & Customer info
-                    const string sql = @"
-                        SELECT 
-                            l.LoanNumber,
-                            c.Name AS BorrowerName
-                        FROM [dbo].[Loans] l
-                        INNER JOIN [dbo].[Customers] c ON l.CustomerId = c.Id
-                        WHERE l.Id = @LoanId";
-
-                    var loanInfo = await connection.QueryFirstOrDefaultAsync<LoanDto>(sql, new { LoanId = LoanId });
-                    if (loanInfo != null)
+                    if (paymentData != null)
                     {
-                        LoanNumber = loanInfo.LoanNumber;
-                        BorrowerName = loanInfo.BorrowerName;
+                        LoanNumber = paymentData.LoanNumber;
+                        BorrowerName = paymentData.BorrowerName;
+                        CurrentDueAmount = paymentData.CurrentDueAmount;
                     }
 
-                    // Fetch next pending EMI amount
-                    const string dueSql = @"
-                        SELECT TOP 1 (Principal + Interest) AS DueTotal 
-                        FROM [dbo].[RepaymentSchedules] 
-                        WHERE LoanId = @LoanId AND Status <> 'Paid' 
-                        ORDER BY EmiNo ASC";
+                    // Initialize default payment values
+                    PaymentForm.Amount =
+                        CurrentDueAmount > 0
+                            ? CurrentDueAmount
+                            : 0;
 
-                    CurrentDueAmount = await connection.QueryFirstOrDefaultAsync<decimal>(dueSql, new { LoanId = LoanId });
+                    PaymentForm.PaymentType =
+                        "Standard EMI Installment";
 
-                    // Set default form values
-                    PaymentForm.Amount = CurrentDueAmount > 0 ? CurrentDueAmount : 0;
-                    PaymentForm.PaymentType = "Standard EMI Installment";
-                    PaymentForm.Mode = "Bank Wire Transfer (NEFT/RTGS)";
-                    PaymentForm.PaymentDate = DateTime.Today;
+                    PaymentForm.Mode =
+                        "Bank Wire Transfer (NEFT/RTGS)";
+
+                    PaymentForm.PaymentDate =
+                        DateTime.Today;
                 }
             }
             finally
@@ -70,20 +99,33 @@ namespace LoanServicingSystem.Components.Pages
             }
         }
 
+        // =========================================
+        // Payment Processing
+        // =========================================
+
+        /// <summary>
+        /// Records the payment transaction and
+        /// redirects back to the loan details page.
+        /// </summary>
         protected async Task SubmitPaymentAsync()
         {
             ErrorMessage = null;
 
+            // Validate payment amount
             if (PaymentForm.Amount <= 0)
             {
-                ErrorMessage = "Please enter a valid payment amount greater than zero.";
+                ErrorMessage =
+                    "Please enter a valid payment amount greater than zero.";
+
                 return;
             }
 
             IsSaving = true;
+
             try
             {
-                if (DatabaseConnection == null) throw new Exception("Database connection missing.");
+                if (DatabaseConnection == null)
+                    throw new Exception("Database connection missing.");
 
                 var payment = new Payment
                 {
@@ -98,7 +140,9 @@ namespace LoanServicingSystem.Components.Pages
                     UpdatedBy = "SystemAdmin"
                 };
 
-                await Payment.RecordPaymentTransactionAsync(DatabaseConnection, payment);
+                await Payment.RecordPaymentTransactionAsync(
+                    DatabaseConnection,
+                    payment);
 
                 NavigationManager?.NavigateTo($"/loans/{LoanId}");
             }
@@ -112,20 +156,29 @@ namespace LoanServicingSystem.Components.Pages
             }
         }
 
+        // =========================================
+        // View Models
+        // =========================================
+
+        /// <summary>
+        /// Represents the payment form displayed
+        /// on the page.
+        /// </summary>
         public class PaymentModel
         {
             public decimal Amount { get; set; }
-            public string PaymentType { get; set; } = "Standard EMI Installment";
-            public string Mode { get; set; } = "Bank Wire Transfer (NEFT/RTGS)";
-            public string? ReferenceNumber { get; set; }
-            public string? Remarks { get; set; }
-            public DateTime PaymentDate { get; set; }
-        }
 
-        private class LoanDto
-        {
-            public string LoanNumber { get; set; } = string.Empty;
-            public string BorrowerName { get; set; } = string.Empty;
+            public string PaymentType { get; set; }
+                = "Standard EMI Installment";
+
+            public string Mode { get; set; }
+                = "Bank Wire Transfer (NEFT/RTGS)";
+
+            public string? ReferenceNumber { get; set; }
+
+            public string? Remarks { get; set; }
+
+            public DateTime PaymentDate { get; set; }
         }
     }
 }

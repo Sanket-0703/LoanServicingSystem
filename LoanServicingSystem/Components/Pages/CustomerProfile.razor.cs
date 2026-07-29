@@ -1,31 +1,71 @@
 ﻿using CoreData;
 using CoreData.CustomerManagement;
+using CoreData.Identity;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace LoanServicingSystem.Components.Pages
 {
     public partial class CustomerProfile : ComponentBase
     {
-        [Inject] private IDatabaseConnection? DatabaseConnection { get; set; }
-        [Inject] private NavigationManager? NavigationManager { get; set; }
+        // =========================================
+        // Dependency Injection
+        // =========================================
 
-        // Captures the optional {Id} from the URL route
-        [Parameter] public Guid? Id { get; set; }
+        [Inject]
+        private IDatabaseConnection? DatabaseConnection { get; set; }
+
+        [Inject]
+        private NavigationManager? NavigationManager { get; set; }
+        [Inject]
+        private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+
+        // =========================================
+        // Route Parameters
+        // =========================================
+
+        /// <summary>
+        /// Customer identifier used when editing an existing record.
+        /// </summary>
+        [Parameter]
+        public Guid? Id { get; set; }
+
+        // =========================================
+        // Page Data
+        // =========================================
 
         public bool IsLoading { get; set; } = true;
+        public Guid UserId { get; private set; }
         public bool IsSaving { get; set; } = false;
+
         public string? ErrorMessage { get; set; }
 
-        public Customer ActiveCustomer { get; set; } = new Customer();
+        public Customer ActiveCustomer { get; set; } = new();
 
+        // =========================================
+        // Lifecycle Methods
+        // =========================================
+
+        /// <summary>
+        /// Loads the customer profile when editing an existing customer.
+        /// </summary>
         protected override async Task OnInitializedAsync()
         {
             IsLoading = true;
+
             try
             {
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+                if (authState.User.Identity?.IsAuthenticated == true)
+                {
+                    UserId = Users.GetCurrentUserId(authState.User);
+                }
                 if (Id.HasValue && DatabaseConnection != null)
                 {
-                    var customer = await Customer.GetByIdAsync(DatabaseConnection, Id.Value);
+                    var customer = await Customer.GetByIdAsync(
+                        DatabaseConnection,
+                        Id.Value);
                     if (customer != null)
                     {
                         ActiveCustomer = customer;
@@ -43,11 +83,18 @@ namespace LoanServicingSystem.Components.Pages
             }
         }
 
+        // =========================================
+        // Data Operations
+        // =========================================
+
+        /// <summary>
+        /// Creates a new customer or updates an existing customer profile.
+        /// </summary>
         protected async Task SaveCustomerAsync()
         {
             ErrorMessage = null;
 
-            // Manual validation for NOT NULL database constraints
+            // Validate mandatory fields
             if (string.IsNullOrWhiteSpace(ActiveCustomer.Name) ||
                 string.IsNullOrWhiteSpace(ActiveCustomer.Phone) ||
                 string.IsNullOrWhiteSpace(ActiveCustomer.PAN))
@@ -57,23 +104,30 @@ namespace LoanServicingSystem.Components.Pages
             }
 
             IsSaving = true;
+
             try
             {
-                if (DatabaseConnection == null) throw new Exception("Database connection missing.");
+                if (DatabaseConnection == null)
+                    throw new Exception("Database connection missing.");
 
-                ActiveCustomer.UpdatedBy = "SystemAdmin";
+                ActiveCustomer.CreatedBy = UserId;
 
                 if (Id.HasValue)
                 {
-                    await Customer.UpdateAsync(DatabaseConnection, ActiveCustomer);
+                    await Customer.UpdateAsync(
+                        DatabaseConnection,
+                        ActiveCustomer);
                 }
                 else
                 {
                     ActiveCustomer.Id = Guid.NewGuid();
-                    await Customer.InsertAsync(DatabaseConnection, ActiveCustomer);
+
+                    await Customer.InsertAsync(
+                        DatabaseConnection,
+                        ActiveCustomer);
                 }
 
-                // Redirect back to the directory on success
+                // Return to the customer directory
                 NavigationManager?.NavigateTo("/customers");
             }
             catch (Exception ex)
@@ -86,9 +140,19 @@ namespace LoanServicingSystem.Components.Pages
             }
         }
 
+        // =========================================
+        // Navigation
+        // =========================================
+
+        /// <summary>
+        /// Returns to the customer directory.
+        /// </summary>
         protected void GoBack()
         {
             NavigationManager?.NavigateTo("/customers");
         }
+
+
+
     }
 }

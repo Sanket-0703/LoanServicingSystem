@@ -6,14 +6,26 @@ namespace LoanServicingSystem.Components.Pages
 {
     public partial class AuditTrail : ComponentBase
     {
+        // =========================================
+        // Dependency Injection
+        // =========================================
+
         [Inject]
         private IDatabaseConnection? DatabaseConnection { get; set; }
+
+        // =========================================
+        // Page State
+        // =========================================
 
         public bool IsLoading { get; set; } = true;
 
         private List<AuditTrailModel> AllLogs { get; set; } = new();
 
         public List<AuditTrailModel> FilteredLogs { get; set; } = new();
+
+        // =========================================
+        // Filter Properties
+        // =========================================
 
         private string _searchTerm = string.Empty;
         public string SearchTerm
@@ -48,7 +60,9 @@ namespace LoanServicingSystem.Components.Pages
             }
         }
 
-        #region KPI Cards
+        // =========================================
+        // Dashboard Summary Metrics
+        // =========================================
 
         protected int TotalChanges =>
             AllLogs.Count;
@@ -68,8 +82,13 @@ namespace LoanServicingSystem.Components.Pages
             AllLogs.Count(x =>
                 x.ChangeType.Equals("Delete", StringComparison.OrdinalIgnoreCase));
 
-        #endregion
+        // =========================================
+        // Lifecycle Methods
+        // =========================================
 
+        /// <summary>
+        /// Loads audit trail records when the page is initialized.
+        /// </summary>
         protected override async Task OnInitializedAsync()
         {
             IsLoading = true;
@@ -78,7 +97,6 @@ namespace LoanServicingSystem.Components.Pages
             {
                 if (DatabaseConnection != null)
                 {
-
                     AllLogs = await AuditTrailModel.GetAuditTrailAsync(DatabaseConnection);
 
                     ApplyFilters();
@@ -91,6 +109,13 @@ namespace LoanServicingSystem.Components.Pages
             }
         }
 
+        // =========================================
+        // Filtering Methods
+        // =========================================
+
+        /// <summary>
+        /// Applies the selected search and filter criteria to the audit records.
+        /// </summary>
         private void ApplyFilters()
         {
             IEnumerable<AuditTrailModel> query = AllLogs;
@@ -98,32 +123,38 @@ namespace LoanServicingSystem.Components.Pages
             if (SelectedModule != "All Modules")
             {
                 query = query.Where(x =>
-                    x.Module.Equals(SelectedModule,
-                    StringComparison.OrdinalIgnoreCase));
+                    x.Module.Equals(
+                        SelectedModule,
+                        StringComparison.OrdinalIgnoreCase));
             }
 
             if (SelectedChangeType != "All Changes")
             {
                 query = query.Where(x =>
-                    x.ChangeType.Equals(SelectedChangeType,
-                    StringComparison.OrdinalIgnoreCase));
+                    x.ChangeType.Equals(
+                        SelectedChangeType,
+                        StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrWhiteSpace(SearchTerm))
             {
                 query = query.Where(x =>
 
-                       x.ChangedBy.Contains(SearchTerm,
-                            StringComparison.OrdinalIgnoreCase)
+                    x.ChangedBy.Contains(
+                        SearchTerm,
+                        StringComparison.OrdinalIgnoreCase)
 
-                    || x.Module.Contains(SearchTerm,
-                            StringComparison.OrdinalIgnoreCase)
+                    || x.Module.Contains(
+                        SearchTerm,
+                        StringComparison.OrdinalIgnoreCase)
 
-                    || x.RecordId.Contains(SearchTerm,
-                            StringComparison.OrdinalIgnoreCase)
+                    || x.RecordId.Contains(
+                        SearchTerm,
+                        StringComparison.OrdinalIgnoreCase)
 
-                    || x.ChangeType.Contains(SearchTerm,
-                            StringComparison.OrdinalIgnoreCase));
+                    || x.ChangeType.Contains(
+                        SearchTerm,
+                        StringComparison.OrdinalIgnoreCase));
             }
 
             FilteredLogs = query
@@ -131,6 +162,13 @@ namespace LoanServicingSystem.Components.Pages
                 .ToList();
         }
 
+        // =========================================
+        // UI Helper Methods
+        // =========================================
+
+        /// <summary>
+        /// Returns the badge styling based on the audit change type.
+        /// </summary>
         protected string GetChangeTypeBadgeClass(string changeType)
         {
             return changeType.ToLower() switch

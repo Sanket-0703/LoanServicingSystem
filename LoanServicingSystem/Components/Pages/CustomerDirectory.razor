@@ -3,9 +3,14 @@
 @attribute [Authorize]
 @namespace LoanServicingSystem.Components.Pages
 @rendermode InteractiveServer
+
 @using LoanServicingSystem.Components.Shared
 
 <PageTitle>Customer Directory - Loan Servicing System</PageTitle>
+
+<!-- ========================================= -->
+<!-- Summary Cards -->
+<!-- ========================================= -->
 
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
 
@@ -14,9 +19,7 @@
               SubTitle="Registered Customers"
               IsLoading="@IsLoading">
 
-        <Icon>
-            👥
-        </Icon>
+        <Icon>👥</Icon>
 
     </StatCard>
 
@@ -28,9 +31,7 @@
               IconBackground="bg-emerald-100"
               IconColor="text-emerald-600">
 
-        <Icon>
-            ✅
-        </Icon>
+        <Icon>✅</Icon>
 
     </StatCard>
 
@@ -42,9 +43,7 @@
               IconBackground="bg-amber-100"
               IconColor="text-amber-600">
 
-        <Icon>
-            ⏳
-        </Icon>
+        <Icon>⏳</Icon>
 
     </StatCard>
 
@@ -56,73 +55,167 @@
               IconBackground="bg-blue-100"
               IconColor="text-blue-600">
 
-        <Icon>
-            🏦
-        </Icon>
+        <Icon>🏦</Icon>
 
     </StatCard>
 
 </div>
 
+<!-- ========================================= -->
+<!-- Page Header -->
+<!-- ========================================= -->
 
 <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
     <div>
-        <h2 class="text-2xl font-bold text-slate-800">Customer Directory</h2>
-        <p class="text-sm text-slate-500 mt-1">Manage borrower profiles, view KYC status, and access customer details.</p>
+
+        <h2 class="text-2xl font-bold text-slate-800">
+            Customer Directory
+        </h2>
+
+        <p class="text-sm text-slate-500 mt-1">
+            Manage borrower profiles, view KYC status, and access customer details.
+        </p>
+
     </div>
-    <a href="/customers/new" class="inline-flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
-        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+
+    <a href="/customers/new"
+       class="inline-flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
+
+        <svg class="w-5 h-5 mr-2 -ml-1"
+             fill="none"
+             stroke="currentColor"
+             viewBox="0 0 24 24">
+
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+            </path>
+
+        </svg>
+
         Add Customer
+
     </a>
+
 </div>
 
-<!-- Search and Filter Bar -->
+<!-- ========================================= -->
+<!-- Search & Filters -->
+<!-- ========================================= -->
+
 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row gap-4">
+
+    <!-- Search -->
+
     <div class="flex-1 relative">
+
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+
+            <svg class="h-5 w-5 text-slate-400"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0">
+                </path>
+
+            </svg>
+
         </div>
-        <input type="text" @bind="SearchQuery" @bind:event="oninput" class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition" placeholder="Search by name, email, or ID..." />
+
+        <input type="text"
+               @bind="SearchQuery"
+               @bind:event="oninput"
+               placeholder="Search by name, email, or ID..."
+               class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition" />
+
     </div>
 
+    <!-- KYC Filter -->
+
     <div class="flex gap-4">
-        <select @bind="SelectedKycStatus" class="block w-full pl-3 pr-10 py-2 text-base border border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg bg-slate-50">
+
+        <select @bind="SelectedKycStatus"
+                class="block w-full pl-3 pr-10 py-2 text-base border border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg bg-slate-50">
+
             <option value="All KYC Statuses">All KYC Statuses</option>
             <option value="Verified">Verified</option>
             <option value="Pending">Pending</option>
             <option value="Rejected">Rejected</option>
+
         </select>
+
     </div>
+
 </div>
 
-<!-- Data Grid -->
+<!-- ========================================= -->
+<!-- Customer Directory -->
+<!-- ========================================= -->
+
 <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+
     <div class="overflow-x-auto">
+
         <table class="min-w-full divide-y divide-slate-200">
+
+            <!-- Table Header -->
+
             <thead class="bg-slate-50">
+
                 <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact Info</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Loans</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">KYC Status</th>
-                    <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Customer
+                    </th>
+
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Contact Info
+                    </th>
+
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Active Loans
+                    </th>
+
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        KYC Status
+                    </th>
+
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+
                 </tr>
+
             </thead>
+
+            <!-- Table Body -->
+
             <tbody class="bg-white divide-y divide-slate-200">
+
                 @if (IsLoading)
                 {
                     <tr>
+
                         <td colspan="5" class="px-6 py-8 text-center text-slate-500 text-sm">
                             Loading customer directory...
                         </td>
+
                     </tr>
                 }
                 else if (!FilteredCustomers.Any())
                 {
                     <tr>
+
                         <td colspan="5" class="px-6 py-8 text-center text-slate-500 text-sm">
                             No customers found matching your criteria.
                         </td>
+
                     </tr>
                 }
                 else
@@ -130,36 +223,88 @@
                     @foreach (var customer in FilteredCustomers)
                     {
                         <tr class="hover:bg-slate-50 transition">
+
+                            <!-- Customer -->
+
                             <td class="px-6 py-4 whitespace-nowrap">
+
                                 <div class="flex items-center">
+
                                     <div class="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold uppercase">
                                         @customer.Name.Substring(0, 1)
                                     </div>
+
                                     <div class="ml-4">
-                                        <div class="text-sm font-medium text-slate-900">@customer.Name</div>
-                                        <div class="text-xs text-slate-500 font-mono">ID: @customer.Id.ToString().Substring(0, 8).ToUpper()</div>
+
+                                        <div class="text-sm font-medium text-slate-900">
+                                            @customer.Name
+                                        </div>
+
+                                        <div class="text-xs text-slate-500 font-mono">
+                                            ID: @customer.Id.ToString().Substring(0, 8).ToUpper()
+                                        </div>
+
                                     </div>
+
                                 </div>
+
                             </td>
+
+                            <!-- Contact -->
+
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-slate-900">@customer.Phone</div>
-                                <div class="text-xs text-slate-500">@(string.IsNullOrWhiteSpace(customer.Email) ? "-" : customer.Email)</div>
+
+                                <div class="text-sm text-slate-900">
+                                    @customer.Phone
+                                </div>
+
+                                <div class="text-xs text-slate-500">
+                                    @(string.IsNullOrWhiteSpace(customer.Email) ? "-" : customer.Email)
+                                </div>
+
                             </td>
+
+                            <!-- Active Loans -->
+
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-slate-900 font-medium">@customer.ActiveLoansCount</div>
+
+                                <div class="text-sm font-medium text-slate-900">
+                                    @customer.ActiveLoansCount
+                                </div>
+
                             </td>
+
+                            <!-- KYC Status -->
+
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full @GetKycBadgeClass(customer.KycStatus)">
+
+                                <span class="px-2.5 py-1 inline-flex text-xs font-semibold rounded-full @GetKycBadgeClass(customer.KycStatus)">
                                     @customer.KycStatus
                                 </span>
+
                             </td>
+
+                            <!-- Actions -->
+
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="/customers/@customer.Id" class="text-indigo-600 hover:text-indigo-900 mr-3">View Profile</a>
+
+                                <a href="/customers/@customer.Id"
+                                   class="text-indigo-600 hover:text-indigo-900">
+
+                                    View Profile
+
+                                </a>
+
                             </td>
+
                         </tr>
                     }
                 }
+
             </tbody>
+
         </table>
+
     </div>
+
 </div>

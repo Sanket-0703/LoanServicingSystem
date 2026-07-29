@@ -1,12 +1,14 @@
 using System.Data;
+
 using ApexCharts;
+
 using CoreData;
 using CoreData.Dashboard;
 using CoreData.Dashboard.Interfaces;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Data.SqlClient;
-
 
 namespace Loan_Servicing_System
 {
@@ -16,52 +18,66 @@ namespace Loan_Servicing_System
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 1. Add Authentication Services
-            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-     .AddCookie(options =>
-     {
-         options.Cookie.Name = "LoanServicingAuth";
-         options.LoginPath = "/login";
-         options.LogoutPath = "/logout";
-         options.AccessDeniedPath = "/unauthorized";
-         options.ExpireTimeSpan = TimeSpan.FromHours(8);
-     });
+            // =========================================
+            // Authentication & Authorization
+            // =========================================
+
+            builder.Services
+                .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.Cookie.Name = "LoanServicingAuth";
+                    options.LoginPath = "/login";
+                    options.LogoutPath = "/logout";
+                    options.AccessDeniedPath = "/unauthorized";
+                    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                });
 
             builder.Services.AddAuthorization();
 
+            // =========================================
+            // Blazor Services
+            // =========================================
 
-            // Add services to the container.
             builder.Services.AddRazorComponents()
-                .AddInteractiveServerComponents();
+                            .AddInteractiveServerComponents();
 
-            // Adding Razor Pages and Blazor Server services
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
 
-            builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
             builder.Services.AddApexCharts();
 
-            // Register database connection
-            builder.Services.AddTransient<IDatabaseConnection>(db =>
-                new DatabaseConnection(builder.Configuration.GetConnectionString("LSSConnection")));
+            // =========================================
+            // Application Services
+            // =========================================
 
-            // DB Coonection
+            builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+
+            builder.Services.AddTransient<IDatabaseConnection>(_ =>
+                new DatabaseConnection(
+                    builder.Configuration.GetConnectionString("LSSConnection")));
+
             builder.Services.AddScoped<IDbConnection>(sp =>
             {
                 var configuration = sp.GetRequiredService<IConfiguration>();
-                var connectionString = configuration.GetConnectionString("LSSConnection")
-                                       ?? throw new InvalidOperationException("Connection string 'LSSConnection' not found.");
+
+                var connectionString =
+                    configuration.GetConnectionString("LSSConnection")
+                    ?? throw new InvalidOperationException(
+                        "Connection string 'LSSConnection' not found.");
+
                 return new SqlConnection(connectionString);
             });
 
-
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // =========================================
+            // Middleware Pipeline
+            // =========================================
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
@@ -75,13 +91,18 @@ namespace Loan_Servicing_System
 
             app.UseAntiforgery();
 
-            // Map your root component (standard for modern Blazor templates)
+            // =========================================
+            // Endpoint Mapping
+            // =========================================
+
             app.MapRazorComponents<Loan_Servicing_System.Components.App>()
-                .AddInteractiveServerRenderMode();
+               .AddInteractiveServerRenderMode();
 
             app.MapGet("/logout", async context =>
             {
-                await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                await context.SignOutAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme);
+
                 context.Response.Redirect("/login");
             });
 

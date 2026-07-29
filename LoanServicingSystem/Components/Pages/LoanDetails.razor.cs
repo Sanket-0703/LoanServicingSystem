@@ -8,22 +8,53 @@ namespace LoanServicingSystem.Components.Pages
 {
     public partial class LoanDetails : ComponentBase
     {
-        [Inject] private IDatabaseConnection? DatabaseConnection { get; set; }
-        [Parameter] public Guid Id { get; set; }
+        // =========================================
+        // Dependency Injection
+        // =========================================
+
+        [Inject]
+        private IDatabaseConnection? DatabaseConnection { get; set; }
+
+        // =========================================
+        // Route Parameters
+        // =========================================
+
+        [Parameter]
+        public Guid Id { get; set; }
+
+        // =========================================
+        // Page Data
+        // =========================================
 
         public bool IsLoading { get; set; } = true;
+
         public string? ErrorMessage { get; set; }
+
         public string ActiveTab { get; set; } = "overview";
 
         public Loan? CurrentLoan { get; set; }
+
         public List<RepaymentSchedule> ScheduleItems { get; set; } = new();
+
         public List<LedgerTransactionItem> LedgerItems { get; set; } = new();
 
-        // Computed Summary Metrics
+        // =========================================
+        // Summary Metrics
+        // =========================================
+
         public decimal PrincipalBalance { get; set; }
+
         public decimal NextEmiAmount { get; set; }
+
         public DateTime? NextEmiDueDate { get; set; }
+
         public decimal TotalPaid { get; set; }
+
+        public int PaidCount { get; set; }
+
+        // =========================================
+        // Modal State
+        // =========================================
 
         public bool ShowDisbursementModal { get; set; }
 
@@ -34,26 +65,41 @@ namespace LoanServicingSystem.Components.Pages
         public string ConfirmationMessage { get; set; } = string.Empty;
 
         public Func<Task>? ConfirmationAction { get; set; }
-        public Disbursement NewDisbursement { get; set; } = new();
-        public int PaidCount { get; set; }
 
+        public Disbursement NewDisbursement { get; set; } = new();
+
+        // =========================================
+        // Lifecycle Methods
+        // =========================================
+
+        /// <summary>
+        /// Loads the loan details when the page is initialized.
+        /// </summary>
         protected override async Task OnInitializedAsync()
         {
             await LoadDataAsync();
         }
 
+        // =========================================
+        // Data Loading
+        // =========================================
+
+        /// <summary>
+        /// Loads the loan, repayment schedule, disbursements,
+        /// payments, and computes dashboard metrics.
+        /// </summary>
         private async Task LoadDataAsync()
         {
             IsLoading = true;
+
             try
             {
                 if (DatabaseConnection != null)
                 {
                     using var connection = DatabaseConnection.GetConnection();
 
-                    // 1. Fetch Loan with Customer and Product names
                     const string loanSql = @"
-                        SELECT 
+                        SELECT
                             l.*,
                             c.Name AS CustomerName,
                             p.Name AS ProductName
@@ -62,27 +108,48 @@ namespace LoanServicingSystem.Components.Pages
                         INNER JOIN [dbo].[LoanProducts] p ON l.ProductId = p.Id
                         WHERE l.Id = @Id";
 
-                    CurrentLoan = await connection.QueryFirstOrDefaultAsync<Loan>(loanSql, new { Id = Id });
+                    CurrentLoan = await connection.QueryFirstOrDefaultAsync<Loan>(
+                        loanSql,
+                        new { Id });
 
                     if (CurrentLoan != null)
                     {
-                        // 2. Fetch Schedule using RepaymentSchedule model
-                        ScheduleItems = await RepaymentSchedule.GetByLoanIdAsync(DatabaseConnection, Id);
+                        ScheduleItems =
+                            await RepaymentSchedule.GetByLoanIdAsync(
+                                DatabaseConnection,
+                                Id);
 
-                        // 3. Fetch Disbursements and Payments for Ledger
-                        var disbursements = await Disbursement.GetByLoanIdAsync(DatabaseConnection, Id);
-                        var payments = await Payment.GetByLoanIdAsync(DatabaseConnection, Id);
+                        var disbursements =
+                            await Disbursement.GetByLoanIdAsync(
+                                DatabaseConnection,
+                                Id);
 
-                        // Compute Stats
-                        PaidCount = ScheduleItems.Count(s => s.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase));
+                        var payments =
+                            await Payment.GetByLoanIdAsync(
+                                DatabaseConnection,
+                                Id);
+
+                        // Calculate summary metrics
+
+                        PaidCount = ScheduleItems.Count(s =>
+                            s.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase));
+
                         TotalPaid = payments.Sum(p => p.Amount);
 
-                        var nextPending = ScheduleItems.FirstOrDefault(s => !s.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase));
+                        var nextPending =
+                            ScheduleItems.FirstOrDefault(s =>
+                                !s.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase));
+
                         if (nextPending != null)
                         {
-                            NextEmiAmount = nextPending.Principal + nextPending.Interest;
-                            NextEmiDueDate = nextPending.DueDate;
-                            PrincipalBalance = nextPending.Outstanding + nextPending.Principal;
+                            NextEmiAmount =
+                                nextPending.Principal + nextPending.Interest;
+
+                            NextEmiDueDate =
+                                nextPending.DueDate;
+
+                            PrincipalBalance =
+                                nextPending.Outstanding + nextPending.Principal;
                         }
                         else
                         {
@@ -91,10 +158,10 @@ namespace LoanServicingSystem.Components.Pages
 
                         if (PrincipalBalance == 0 && ScheduleItems.Any())
                         {
-                            PrincipalBalance = ScheduleItems.Last().Outstanding;
+                            PrincipalBalance =
+                                ScheduleItems.Last().Outstanding;
                         }
 
-                        // Build Ledger
                         BuildLedger(disbursements, payments);
                     }
                     else
@@ -110,7 +177,16 @@ namespace LoanServicingSystem.Components.Pages
             }
         }
 
-        private void BuildLedger(List<Disbursement> disbursements, List<Payment> payments)
+        // =========================================
+        // Data Processing
+        // =========================================
+
+        /// <summary>
+        /// Builds the transaction ledger with running balance.
+        /// </summary>
+        private void BuildLedger(
+            List<Disbursement> disbursements,
+            List<Payment> payments)
         {
             var rawEvents = new List<LedgerEvent>();
 
@@ -130,20 +206,28 @@ namespace LoanServicingSystem.Components.Pages
                 rawEvents.Add(new LedgerEvent
                 {
                     Timestamp = p.PaymentDate,
-                    Type = string.IsNullOrWhiteSpace(p.PaymentType) ? "EMI Payment Received" : p.PaymentType,
+                    Type = string.IsNullOrWhiteSpace(p.PaymentType)
+                        ? "EMI Payment Received"
+                        : p.PaymentType,
                     Debit = null,
                     Credit = p.Amount
                 });
             }
 
-            var sorted = rawEvents.OrderBy(e => e.Timestamp).ToList();
+            var sorted =
+                rawEvents.OrderBy(e => e.Timestamp).ToList();
+
             decimal runningBalance = 0;
+
             LedgerItems.Clear();
 
             foreach (var ev in sorted)
             {
-                if (ev.Debit.HasValue) runningBalance += ev.Debit.Value;
-                if (ev.Credit.HasValue) runningBalance -= ev.Credit.Value;
+                if (ev.Debit.HasValue)
+                    runningBalance += ev.Debit.Value;
+
+                if (ev.Credit.HasValue)
+                    runningBalance -= ev.Credit.Value;
 
                 LedgerItems.Add(new LedgerTransactionItem
                 {
@@ -156,23 +240,13 @@ namespace LoanServicingSystem.Components.Pages
             }
         }
 
-        protected string GetStatusBadgeClass(string status) => status switch
-        {
-            "Disbursed" => "bg-emerald-100 text-emerald-800",
-            "Approved" => "bg-blue-100 text-blue-800",
-            "Draft" => "bg-slate-100 text-slate-800",
-            "Closed" => "bg-purple-100 text-purple-800",
-            _ => "bg-gray-100 text-gray-800"
-        };
+        // =========================================
+        // Loan Actions
+        // =========================================
 
-        private class LedgerEvent
-        {
-            public DateTime Timestamp { get; set; }
-            public string Type { get; set; } = string.Empty;
-            public decimal? Debit { get; set; }
-            public decimal? Credit { get; set; }
-        }
-
+        /// <summary>
+        /// Opens the approval confirmation dialog.
+        /// </summary>
         protected Task ApproveLoan()
         {
             ConfirmationTitle = "Approve Loan";
@@ -214,6 +288,10 @@ namespace LoanServicingSystem.Components.Pages
                 StateHasChanged();
             }
         }
+
+        /// <summary>
+        /// Opens the rejection confirmation dialog.
+        /// </summary>
         protected Task RejectLoan()
         {
             ConfirmationTitle = "Reject Loan";
@@ -243,6 +321,9 @@ namespace LoanServicingSystem.Components.Pages
             await LoadDataAsync();
         }
 
+        /// <summary>
+        /// Opens the loan disbursement dialog.
+        /// </summary>
         protected Task DisburseLoan()
         {
             if (CurrentLoan == null)
@@ -260,24 +341,9 @@ namespace LoanServicingSystem.Components.Pages
             return Task.CompletedTask;
         }
 
-        protected void CloseDisbursementModal()
-        {
-            ShowDisbursementModal = false;
-        }
-
-        protected async Task ExecuteConfirmation()
-        {
-            if (ConfirmationAction != null)
-            {
-                await ConfirmationAction();
-            }
-        }
-
-        protected void CloseConfirmationModal()
-        {
-            ShowConfirmationModal = false;
-        }
-
+        /// <summary>
+        /// Saves the disbursement and updates loan status.
+        /// </summary>
         protected async Task ConfirmDisbursement()
         {
             if (DatabaseConnection == null || CurrentLoan == null)
@@ -319,12 +385,67 @@ namespace LoanServicingSystem.Components.Pages
             }
         }
 
+        // =========================================
+        // Modal Actions
+        // =========================================
+
+        protected async Task ExecuteConfirmation()
+        {
+            if (ConfirmationAction != null)
+            {
+                await ConfirmationAction();
+            }
+        }
+
+        protected void CloseConfirmationModal()
+        {
+            ShowConfirmationModal = false;
+        }
+
+        protected void CloseDisbursementModal()
+        {
+            ShowDisbursementModal = false;
+        }
+
+        // =========================================
+        // UI Helper Methods
+        // =========================================
+
+        protected string GetStatusBadgeClass(string status) =>
+            status switch
+            {
+                "Disbursed" => "bg-emerald-100 text-emerald-800",
+                "Approved" => "bg-blue-100 text-blue-800",
+                "Draft" => "bg-slate-100 text-slate-800",
+                "Closed" => "bg-purple-100 text-purple-800",
+                _ => "bg-gray-100 text-gray-800"
+            };
+
+        // =========================================
+        // Helper Classes
+        // =========================================
+
+        private class LedgerEvent
+        {
+            public DateTime Timestamp { get; set; }
+
+            public string Type { get; set; } = string.Empty;
+
+            public decimal? Debit { get; set; }
+
+            public decimal? Credit { get; set; }
+        }
+
         public class LedgerTransactionItem
         {
             public DateTime Timestamp { get; set; }
+
             public string TransactionType { get; set; } = string.Empty;
+
             public decimal? Debit { get; set; }
+
             public decimal? Credit { get; set; }
+
             public decimal RunningBalance { get; set; }
         }
     }

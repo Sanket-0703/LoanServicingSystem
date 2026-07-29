@@ -1,9 +1,15 @@
 ﻿@page "/notifications"
+
 @namespace LoanServicingSystem.Components.Pages
+
 @attribute [Authorize]
 @rendermode InteractiveServer
 
 <PageTitle>Notifications - Loan Servicing System</PageTitle>
+
+<!-- ========================================= -->
+<!-- Page Header -->
+<!-- ========================================= -->
 
 <div class="mb-6 flex items-center justify-between">
 
@@ -28,10 +34,16 @@
 
 </div>
 
+<!-- ========================================= -->
+<!-- Notifications List -->
+<!-- ========================================= -->
+
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
     @if (IsLoading)
     {
+        <!-- Loading State -->
+
         <div class="py-16 text-center text-slate-500">
 
             Loading notifications...
@@ -40,6 +52,8 @@
     }
     else if (!NotificationList.Any())
     {
+        <!-- Empty State -->
+
         <div class="py-16 text-center">
 
             <div class="text-5xl mb-3">
@@ -62,11 +76,16 @@
     }
     else
     {
+        <!-- Notification Items -->
         @foreach (var notification in NotificationList)
         {
             <div class="border-b border-slate-100 p-5 flex justify-between items-center hover:bg-slate-50 transition">
 
+                <!-- Notification Content -->
+
                 <div class="flex items-start gap-4">
+
+                    <!-- Read Status Indicator -->
 
                     <div class="mt-1">
 
@@ -80,6 +99,8 @@
                         }
 
                     </div>
+
+                    <!-- Message -->
 
                     <div>
 
@@ -99,6 +120,7 @@
 
                 </div>
 
+                <!-- Action -->
                 @if (!notification.IsRead)
                 {
                     <button @onclick="() => MarkAsRead(notification.Id)"

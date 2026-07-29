@@ -1,13 +1,20 @@
 ﻿using CoreData.Dashboard.Interfaces;
 using CoreData.Dashboard.Models;
 using Microsoft.AspNetCore.Components;
-
-namespace LoanServicingSystem.Components.Dashboards;
+namespace LoanServicingSystem.Components.Pages;
 
 public partial class CollectionsDashboard : ComponentBase
 {
+    // =========================================
+    // Dependency Injection
+    // =========================================
+
     [Inject]
     public IDashboardRepository DashboardRepository { get; set; } = default!;
+
+    // =========================================
+    // Dashboard Data
+    // =========================================
 
     protected CollectionsDashboardModel Dashboard { get; private set; } = new();
 
@@ -44,6 +51,13 @@ public partial class CollectionsDashboard : ComponentBase
         }
     };
 
+    // =========================================
+    // Lifecycle Methods
+    // =========================================
+
+    /// <summary>
+    /// Loads the collections dashboard data when the page is initialized.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         try

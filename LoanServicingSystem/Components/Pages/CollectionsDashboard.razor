@@ -1,19 +1,26 @@
-﻿@namespace LoanServicingSystem.Components.Dashboards
-@using LoanServicingSystem.Components.Shared
-
+﻿@using LoanServicingSystem.Components.Shared
+@namespace LoanServicingSystem.Components.Pages
 <div class="space-y-5">
+
+    <!-- ========================================= -->
+    <!-- Dashboard Header -->
+    <!-- ========================================= -->
 
     <DashboardHeader />
 
-    <!-- ======================================= -->
-    <!-- TOP SECTION -->
-    <!-- ======================================= -->
+    <!-- ========================================= -->
+    <!-- Dashboard Overview -->
+    <!-- ========================================= -->
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
 
-        <!-- LEFT -->
+        <!-- ========================================= -->
+        <!-- Left Section -->
+        <!-- ========================================= -->
 
         <div class="xl:col-span-5 space-y-5">
+
+            <!-- KPI Cards -->
 
             <div class="grid grid-cols-2 gap-4">
 
@@ -55,37 +62,45 @@
 
             </div>
 
+            <!-- Quick Actions -->
+
             <QuickActions Actions="QuickActionsList" />
 
         </div>
 
-        <!-- RIGHT -->
+        <!-- ========================================= -->
+        <!-- Right Section -->
+        <!-- ========================================= -->
 
         <div class="xl:col-span-7 space-y-5">
 
-            <CollectionTrendChart
-                Data="Dashboard.CollectionTrend" />
+            <!-- Collection Trend Chart -->
 
-            <LoanStatusChart
-                Data="Dashboard.OverdueStatus" />
+            <CollectionTrendChart Data="Dashboard.CollectionTrend" />
+
+            <!-- Overdue Status Chart -->
+
+            <LoanStatusChart Data="Dashboard.OverdueStatus" />
 
         </div>
 
     </div>
 
-    <!-- ======================================= -->
-    <!-- TABLES -->
-    <!-- ======================================= -->
+    <!-- ========================================= -->
+    <!-- Recent Activity -->
+    <!-- ========================================= -->
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
-        <RecentLoansTable
-            Title="Overdue Loans"
-            Loans="Dashboard.OverdueLoans" />
+        <!-- Overdue Loans -->
 
-        <RecentPaymentsTable
-            Title="Today's Payments"
-            Payments="Dashboard.RecentPayments" />
+        <RecentLoansTable Title="Overdue Loans"
+                          Loans="Dashboard.OverdueLoans" />
+
+        <!-- Recent Payments -->
+
+        <RecentPaymentsTable Title="Today's Payments"
+                             Payments="Dashboard.RecentPayments" />
 
     </div>
 

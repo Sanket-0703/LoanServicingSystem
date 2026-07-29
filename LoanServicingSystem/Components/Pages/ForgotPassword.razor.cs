@@ -6,18 +6,38 @@ namespace LoanServicingSystem.Components.Pages
 {
     public partial class ForgotPassword : ComponentBase
     {
+        // =========================================
+        // Dependency Injection
+        // =========================================
+
         [Inject]
         private IDatabaseConnection? DatabaseConnection { get; set; }
 
-        public string Email { get; set; } = string.Empty; // Note: Ensure standard auto-property syntax 'get; set;'
+        // =========================================
+        // Page Data
+        // =========================================
+
+        public string Email { get; set; } = string.Empty;
+
         public bool IsLoading { get; set; } = false;
+
         public bool IsSuccess { get; set; } = false;
+
         public string? ErrorMessage { get; set; }
 
+        // =========================================
+        // Form Actions
+        // =========================================
+
+        /// <summary>
+        /// Validates the email address and initiates the password
+        /// reset request process.
+        /// </summary>
         protected async Task HandleResetRequest()
         {
             ErrorMessage = null;
 
+            // Validate email input
             if (string.IsNullOrWhiteSpace(Email))
             {
                 ErrorMessage = "Please enter your email address.";
@@ -25,18 +45,21 @@ namespace LoanServicingSystem.Components.Pages
             }
 
             IsLoading = true;
+
             StateHasChanged();
 
             try
             {
-                if (DatabaseConnection == null) throw new Exception("Database connection is missing.");
+                if (DatabaseConnection == null)
+                    throw new Exception("Database connection is missing.");
 
-                // Check if user exists in the database by email
-                var user = await Users.GetUserByEmailAsync(DatabaseConnection, Email);
+                // Check whether the email exists
+                var user = await Users.GetUserByEmailAsync(
+                    DatabaseConnection,
+                    Email);
 
-                // Even if user isn't found, standard security practice is to show the success message 
-                // to prevent email enumeration attacks, but we query the database to validate the flow.
-                await Task.Delay(800); // Simulate network request
+                // Prevent email enumeration by always showing success
+                await Task.Delay(800);
 
                 IsSuccess = true;
             }
