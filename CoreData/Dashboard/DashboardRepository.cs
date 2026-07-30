@@ -161,10 +161,9 @@ ORDER BY MIN(PaymentDate);
         return dashboard;
     }
 
-    public async Task<LoanOfficerDashboardModel> GetLoanOfficerDashboardAsync()
+    public async Task<LoanOfficerDashboardModel> GetLoanOfficerDashboardAsync(Guid Id)
     {
         const string sql = @"
-
 --------------------------------------------------------
 -- KPI CARDS
 --------------------------------------------------------
@@ -173,16 +172,17 @@ SELECT
 
 COUNT(*) TotalApplications,
 
-COUNT(CASE WHEN Status='Pending' THEN 1 END)
+COUNT(CASE WHEN Status='Draft' THEN 1 END)
     PendingApprovalCount,
 
-COUNT(CASE WHEN Status='Approved' THEN 1 END)
+COUNT(CASE WHEN Status='Disbursed' OR Status='Approved' THEN 1 END)
     ApprovedCount,
 
 COUNT(CASE WHEN Status='Rejected' THEN 1 END)
     RejectedCount
 
-FROM Loans;
+FROM Loans 
+where CreatedBy=@Id;
 
 --------------------------------------------------------
 -- WEEKLY APPLICATIONS
@@ -197,7 +197,7 @@ COUNT(*) Amount
 FROM Loans
 
 WHERE StartDate>=DATEADD(DAY,-6,CAST(GETDATE() AS DATE))
-
+and CreatedBy=@Id
 GROUP BY
 FORMAT(StartDate,'ddd'),
 DATEPART(WEEKDAY,StartDate)
@@ -216,6 +216,7 @@ Status,
 COUNT(*) Count
 
 FROM Loans
+where CreatedBy=@Id
 
 GROUP BY Status;
 
@@ -233,12 +234,14 @@ l.Principal,
 
 l.Status,
 
-l.StartDate
+l.StartDate,
+l.CreatedBy
 
 FROM Loans l
 
 INNER JOIN Customers c
 ON l.CustomerId=c.Id
+where l.CreatedBy=@Id
 
 ORDER BY l.StartDate DESC;
 
@@ -263,7 +266,8 @@ FROM Loans l
 INNER JOIN Customers c
 ON l.CustomerId=c.Id
 
-WHERE l.Status='Pending'
+WHERE l.Status='Draft'
+and l.CreatedBy=@Id
 
 ORDER BY l.StartDate DESC;
 
@@ -271,7 +275,7 @@ ORDER BY l.StartDate DESC;
 
         var dashboard = new LoanOfficerDashboardModel();
 
-        using var multi = await _connection.QueryMultipleAsync(sql);
+        using var multi = await _connection.QueryMultipleAsync(sql, new { Id });
 
         dashboard = await multi.ReadSingleAsync<LoanOfficerDashboardModel>();
 

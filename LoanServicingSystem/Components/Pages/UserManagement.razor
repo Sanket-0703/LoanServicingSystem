@@ -47,7 +47,7 @@
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">User Staff</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Assigned Role</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Login</th>
+                    @* <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Login</th> *@
                     <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
@@ -99,10 +99,10 @@
                                     <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800">Disabled</span>
                                 }
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-slate-500">
-                                <!-- Placeholder for Last Login as it's not in the DB schema yet -->
-                                -
-                            </td>
+                            @* <td class="px-6 py-4 whitespace-nowrap text-slate-500"> *@
+                            @*     <!-- Placeholder for Last Login as it's not in the DB schema yet --> *@
+                            @*     - *@
+                            @* </td> *@
                             <td class="px-6 py-4 whitespace-nowrap text-right font-medium">
                                 <button @onclick="() => HandleEditRole(user.Id)" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit Role</button>
                                 <button @onclick="() => HandleToggleStatus(user.Id)" class="text-red-600 hover:text-red-900">

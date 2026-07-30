@@ -167,8 +167,8 @@ ORDER BY l.LoanNumber DESC
                 // 1. Insert Loan
                 const string loanSql = @"
                     INSERT INTO [dbo].[Loans] 
-                    (Id, LoanNumber, CustomerId, ProductId, Principal, InterestRate, Tenure, RepaymentFrequency, StartDate, EndDate, Status, UpdatedBy)
-                    VALUES (@Id, @LoanNumber, @CustomerId, @ProductId, @Principal, @InterestRate, @Tenure, @RepaymentFrequency, @StartDate, @EndDate, @Status, @UpdatedBy)";
+                    (Id, LoanNumber, CustomerId, ProductId, Principal, InterestRate, Tenure, RepaymentFrequency, StartDate, EndDate, Status, UpdatedBy,CreatedBy)
+                    VALUES (@Id, @LoanNumber, @CustomerId, @ProductId, @Principal, @InterestRate, @Tenure, @RepaymentFrequency, @StartDate, @EndDate, @Status, @UpdatedBy,@CreatedBy)";
 
                 await connection.ExecuteAsync(loanSql, loan, transaction);
 

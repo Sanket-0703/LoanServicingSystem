@@ -46,15 +46,17 @@ namespace CoreData.Servicing
 
     c.Name AS BorrowerName,
 
-    ISNULL(
+    ISNULL
+(
     (
-        SELECT TOP 1
-            Principal + Interest
+        SELECT SUM(Principal + Interest)
         FROM RepaymentSchedules
         WHERE LoanId = @LoanId
           AND Status <> 'Paid'
-        ORDER BY EmiNo
-    ),0) AS CurrentDueAmount,
+          AND DueDate < CAST(GETDATE() AS DATE)
+    ),
+    0
+) AS CurrentDueAmount,
 
     ISNULL(
     (

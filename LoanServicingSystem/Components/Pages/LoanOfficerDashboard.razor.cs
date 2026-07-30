@@ -1,7 +1,8 @@
 ﻿using CoreData.Dashboard.Interfaces;
 using CoreData.Dashboard.Models;
+using CoreData.Identity;
 using Microsoft.AspNetCore.Components;
-
+using Microsoft.AspNetCore.Components.Authorization;
 namespace LoanServicingSystem.Components.Pages;
 
 public partial class LoanOfficerDashboard : ComponentBase
@@ -12,6 +13,8 @@ public partial class LoanOfficerDashboard : ComponentBase
 
     [Inject]
     public IDashboardRepository DashboardRepository { get; set; } = default!;
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
 
     // =========================================
     // Page Data
@@ -20,6 +23,7 @@ public partial class LoanOfficerDashboard : ComponentBase
     protected LoanOfficerDashboardModel Dashboard { get; private set; } = new();
 
     protected bool IsLoading { get; private set; } = true;
+    public Guid UserId { get; set; }
 
     // =========================================
     // Quick Actions
@@ -67,6 +71,13 @@ public partial class LoanOfficerDashboard : ComponentBase
     {
         try
         {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                UserId = Users.GetCurrentUserId(authState.User);
+
+
+            }
             await ReloadDashboard();
         }
         catch (Exception ex)
@@ -90,7 +101,7 @@ public partial class LoanOfficerDashboard : ComponentBase
     {
         IsLoading = true;
 
-        Dashboard = await DashboardRepository.GetLoanOfficerDashboardAsync();
+        Dashboard = await DashboardRepository.GetLoanOfficerDashboardAsync(UserId);
 
         IsLoading = false;
 

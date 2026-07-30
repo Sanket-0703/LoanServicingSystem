@@ -34,15 +34,18 @@
                     <div class="hidden md:flex items-center gap-1 bg-slate-100/50 p-1 rounded-xl border border-slate-200/50">
 
                         <NavLink href="/dashboard"
-                                 class="px-4 py-2 bg-white text-indigo-600 rounded-lg text-sm font-semibold shadow-sm border border-slate-200/50 transition-all"
-                                 ActiveClass="bg-white text-indigo-600">
+                                 Match="NavLinkMatch.All"
+                                 class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all duration-200"
+                                 ActiveClass="bg-white text-indigo-600 shadow-sm border border-slate-200/50 font-semibold">
                             Dashboard
                         </NavLink>
 
                         <AuthorizeView Roles="Admin">
                             <Authorized>
                                 <NavLink href="/users"
-                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                         Match="NavLinkMatch.All"
+                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all duration-200"
+                                         ActiveClass="bg-white text-indigo-600 shadow-sm border border-slate-200/50 font-semibold">
                                     Users
                                 </NavLink>
                             </Authorized>
@@ -51,16 +54,20 @@
                         <AuthorizeView Roles="Admin">
                             <Authorized>
                                 <NavLink href="/loan-products"
-                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                         Match="NavLinkMatch.All"
+                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all duration-200"
+                                         ActiveClass="bg-white text-indigo-600 shadow-sm border border-slate-200/50 font-semibold">
                                     Loan Products
                                 </NavLink>
                             </Authorized>
-                        </AuthorizeView>    
+                        </AuthorizeView>
 
                         <AuthorizeView Roles="Admin,LoanOfficer,Auditor">
                             <Authorized>
                                 <NavLink href="/loans"
-                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                         Match="NavLinkMatch.All"
+                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all duration-200"
+                                         ActiveClass="bg-white text-indigo-600 shadow-sm border border-slate-200/50 font-semibold">
                                     Loans
                                 </NavLink>
                             </Authorized>
@@ -69,7 +76,9 @@
                         <AuthorizeView Roles="Admin,LoanOfficer,CollectionsAgent">
                             <Authorized>
                                 <NavLink href="/customers"
-                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                         Match="NavLinkMatch.All"
+                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all duration-200"
+                                         ActiveClass="bg-white text-indigo-600 shadow-sm border border-slate-200/50 font-semibold">
                                     Customers
                                 </NavLink>
                             </Authorized>
@@ -78,34 +87,42 @@
                         <AuthorizeView Roles="Admin,LoanOfficer,Auditor">
                             <Authorized>
                                 <NavLink href="/statements"
-                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                         Match="NavLinkMatch.All"
+                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all duration-200"
+                                         ActiveClass="bg-white text-indigo-600 shadow-sm border border-slate-200/50 font-semibold">
                                     Statements
                                 </NavLink>
                             </Authorized>
                         </AuthorizeView>
 
-                        <AuthorizeView Roles="Admin,CollectionsAgent">
+                        @* <AuthorizeView Roles="Admin,CollectionsAgent">
                             <Authorized>
                                 <NavLink href="/collections"
-                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                         Match="NavLinkMatch.All"
+                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all duration-200"
+                                         ActiveClass="bg-white text-indigo-600 shadow-sm border border-slate-200/50 font-semibold">
                                     Collections
                                 </NavLink>
                             </Authorized>
-                        </AuthorizeView>
+                        </AuthorizeView> *@
 
-                        <AuthorizeView Roles="Admin,Auditor">
+                        @* <AuthorizeView Roles="Admin,Auditor"> 
                             <Authorized>
                                 <NavLink href="/reports"
-                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                         Match="NavLinkMatch.All"
+                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all duration-200"
+                                         ActiveClass="bg-white text-indigo-600 shadow-sm border border-slate-200/50 font-semibold">
                                     Reports
                                 </NavLink>
                             </Authorized>
-                        </AuthorizeView>
+                         </AuthorizeView> *@
 
                         <AuthorizeView Roles="Admin,Auditor">
                             <Authorized>
                                 <NavLink href="/audit-trail"
-                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all">
+                                         Match="NavLinkMatch.All"
+                                         class="px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg text-sm font-medium transition-all duration-200"
+                                         ActiveClass="bg-white text-indigo-600 shadow-sm border border-slate-200/50 font-semibold">
                                     Audit Trail
                                 </NavLink>
                             </Authorized>
