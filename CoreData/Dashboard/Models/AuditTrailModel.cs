@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Dapper.Contrib.Extensions;
 
 namespace CoreData.Dashboard.Models;
 
@@ -16,6 +17,48 @@ public class AuditTrailModel
 
     public string RecordNumber { get; set; } = string.Empty;
 
+    [Computed]
+    public string LoanNumber { get; set; } = string.Empty;
+
+    [Computed]
+    public string CustomerName { get; set; } = string.Empty;
+
+    public static async Task<List<AuditTrailModel>> GetByLoanIdAsync(IDatabaseConnection databaseConnection, Guid loanId)
+    {
+        try
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            var auditTrail = new List<AuditTrailModel>();
+
+            auditTrail.AddRange(await connection.QueryAsync<AuditTrailModel>(@"
+        SELECT
+            ChangedOn,
+            ChangedBy,
+            'Loans' AS Module,
+            ChangeType,
+            CAST(Id AS NVARCHAR(100)) AS RecordId,
+            LoanNumber AS RecordNumber
+        FROM LoansAuditTrail
+        WHERE Id = @LoanId",
+                new
+                {
+                    LoanId = loanId
+                }));
+
+            return auditTrail
+                .OrderByDescending(x => x.ChangedOn)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            // Log the exact SQL error to the server console
+            Console.WriteLine($"Error fetching audit trail for Loan {loanId}: {ex.Message}");
+
+            // Rethrow the exception so LoadDataAsync catches it and displays it
+            throw;
+        }
+    }
     public static async Task<List<AuditTrailModel>> GetAuditTrailAsync(
      IDatabaseConnection databaseConnection)
     {
@@ -78,16 +121,7 @@ public class AuditTrailModel
             ReferenceNumber AS RecordNumber
         FROM DisbursementsAuditTrail"));
 
-        // Repayment Schedules
-        auditTrail.AddRange(await connection.QueryAsync<AuditTrailModel>(@"
-        SELECT
-            ChangedOn,
-            ChangedBy,
-            'Repayment Schedule' AS Module,
-            ChangeType,
-            CAST(Id AS NVARCHAR(100)) AS RecordId,
-            CONCAT('EMI-', EmiNo) AS RecordNumber
-        FROM RepaymentSchedulesAuditTrail"));
+
 
         return auditTrail
             .OrderByDescending(x => x.ChangedOn)

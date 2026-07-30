@@ -22,7 +22,7 @@ else
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
 
     <StatCard Title="Outstanding"
-              Value="@(StatementData?.Metadata.Principal.ToString("C") ?? "$0")"
+                  Value="@(SelectedLoan?.Principal.ToString("C") ?? "$0")"
               SubTitle="Current Balance"
               IsLoading="@IsGenerating"
               ValueColor="text-red-600">
@@ -32,7 +32,7 @@ else
     </StatCard>
 
     <StatCard Title="Principal"
-              Value="@(StatementData?.Metadata.Principal.ToString("C") ?? "$0")"
+                  Value="@(SelectedLoan?.Principal.ToString("C") ?? "$0")"
               SubTitle="Loan Amount"
               IsLoading="@IsGenerating"
               ValueColor="text-blue-600">
@@ -42,7 +42,7 @@ else
     </StatCard>
 
     <StatCard Title="Interest Rate"
-              Value="@(StatementData?.Metadata.InterestRate.ToString("0.00") + "%" ?? "0%")"
+                  Value="@(SelectedLoan?.InterestRate.ToString("0.00") + "%" ?? "0%")"
               SubTitle="Annual Rate"
               IsLoading="@IsGenerating"
               ValueColor="text-amber-600">
@@ -52,7 +52,7 @@ else
     </StatCard>
 
     <StatCard Title="Transactions"
-              Value="@(StatementData?.Rows.Count.ToString() ?? "0")"
+                  Value="@TotalPayments.ToString()"
               SubTitle="Within Period"
               IsLoading="@IsGenerating"
               ValueColor="text-emerald-600">
@@ -65,196 +65,87 @@ else
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- Statement Parameters Form -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
-            <h3 class="font-bold text-slate-800 text-lg pb-2 border-b border-slate-100">Statement Criteria</h3>
+        <!-- Export Panel -->
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Select Loan Account</label>
-                <select @bind="SelectedLoanId" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
-                    @foreach (var loan in AvailableLoans)
-                    {
-                        <option value="@loan.Id">@loan.LoanNumber (@loan.CustomerName)</option>
-                    }
-                </select>
-            </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Statement Type</label>
-                <select @bind="StatementType" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition">
-                    <option>Account Statement</option>
-                    <option>Interest Certificate</option>
-                    <option>No Due Certificate</option>
-                </select>
-            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-6">
+                Export Statement
+            </h3>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-4">
+
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-                    <input type="date" @bind="StartDate" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
-                    <input type="date" @bind="EndDate" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition" />
-                </div>
-            </div>
 
-            <div class="pt-4">
-                <button @onclick="GeneratePreviewAsync" disabled="@IsGenerating" class="w-full py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition shadow-sm flex items-center justify-center">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                        Select Loan Account
+                    </label>
+
+                    <select value="@SelectedLoanId"
+                            @onchange="OnLoanChanged"
+                            class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-slate-50">
+
+                        @foreach (var loan in AvailableLoans)
+                        {
+                            <option value="@loan.Id">
+                                @loan.LoanNumber (@loan.CustomerName)
+                            </option>
+                        }
+
+                    </select>
+
+                </div>
+
+                <button @onclick="ExportStatement"
+                        disabled="@IsGenerating"
+                        class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+
                     @if (IsGenerating)
                     {
-                        <span>Generating...</span>
+                        <span>Exporting...</span>
                     }
                     else
                     {
-                        <span>Preview Statement</span>
+                        <span>📊 Export Excel Statement</span>
                     }
+
                 </button>
+
             </div>
+
         </div>
 
         <!-- Statement Preview Canvas -->
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col justify-between">
-            <div>
-                <div class="flex justify-between items-start pb-6 border-b border-slate-200">
-                    <div>
-                        <h2 class="text-xl font-bold text-slate-900">LOAN SERVICING SYSTEM</h2>
-                        <p class="text-xs text-slate-500">Official Account Statement & Ledger Summary</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="px-3 py-1 bg-slate-100 text-slate-700 font-mono text-xs rounded-full font-semibold">STMT-@DateTime.UtcNow.Year-@Guid.NewGuid().ToString().Substring(0, 4).ToUpper()</span>
-                        <p class="text-xs text-slate-400 mt-1">Generated: @DateTime.Today.ToString("MMM dd, yyyy")</p>
-                    </div>
-                </div>
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-12 flex flex-col items-center justify-center">
 
-                <div class="mb-5 flex justify-between items-center">
-
-                    <div>
-
-                        <h3 class="text-lg font-semibold">
-
-                            @StatementType
-
-                        </h3>
-
-                        <p class="text-sm text-slate-500">
-
-                            @StartDate.ToString("dd MMM yyyy")
-                            -
-                            @EndDate.ToString("dd MMM yyyy")
-
-                        </p>
-
-                    </div>
-
-                    <div class="text-right">
-
-                        <div class="text-xs text-slate-500">
-
-                            Generated On
-
-                        </div>
-
-                        <div class="font-semibold">
-
-                            @DateTime.Now.ToString("dd MMM yyyy HH:mm")
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                @if (StatementData != null)
-                {
-                    <div class="py-6 grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span class="text-slate-400 block text-xs uppercase tracking-wider">Borrower Details</span>
-                            <strong class="text-slate-900">@StatementData.Metadata.BorrowerName</strong>
-                            <p class="text-slate-600 text-xs">@StatementData.Metadata.CustomerId.ToString().Substring(0, 8).ToUpper() &bull; @(string.IsNullOrWhiteSpace(StatementData.Metadata.BorrowerEmail) ? "-" : StatementData.Metadata.BorrowerEmail)</p>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 block text-xs uppercase tracking-wider">Account Terms</span>
-                            <strong class="text-slate-900">@StatementData.Metadata.LoanNumber (@StatementData.Metadata.ProductName)</strong>
-                            <p class="text-slate-600 text-xs">Principal: @StatementData.Metadata.Principal.ToString("C") &bull; Rate: @StatementData.Metadata.InterestRate.ToString("0.00")%</p>
-                        </div>
-                    </div>
-
-                    <div class="border border-slate-200 rounded-xl overflow-hidden mb-6">
-                        <table class="min-w-full divide-y divide-slate-200 text-xs">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th class="px-4 py-2 text-left font-semibold text-slate-500">Date</th>
-                                    <th class="px-4 py-2 text-left font-semibold text-slate-500">Particulars</th>
-                                    <th class="px-4 py-2 text-right font-semibold text-slate-500">Debit</th>
-                                    <th class="px-4 py-2 text-right font-semibold text-slate-500">Credit</th>
-                                    <th class="px-4 py-2 text-right font-semibold text-slate-500">Balance</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200">
-                                @if (!StatementData.Rows.Any())
-                                {
-                                    <tr>
-                                        <td colspan="5" class="px-4 py-6 text-center text-slate-500">No transactions found for the selected date range.</td>
-                                    </tr>
-                                }
-                                else
-                                {
-                                    @foreach (var row in StatementData.Rows)
-                                    {
-                                        <tr>
-                                            <td class="px-4 py-2 text-slate-500">@row.Timestamp.ToString("MMM dd, yyyy")</td>
-                                            <td class="px-4 py-2 font-medium">@row.TransactionType</td>
-                                            <td class="px-4 py-2 text-right">
-                                                @if (row.Debit.HasValue)
-                                                {
-                                                    <span class="font-semibold text-red-600">
-                                                        @row.Debit.Value.ToString("C")
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span>-</span>
-                                                }
-                                            </td>
-                                            <td class="px-4 py-2 text-right text-emerald-600">@(row.Credit.HasValue ? row.Credit.Value.ToString("C") : "-")</td>
-                                            <td class="px-4 py-2 text-right font-medium">
-                                                <span class="font-bold text-indigo-700">
-                                                    @row.RunningBalance.ToString("C")
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="py-16 text-center text-slate-400 text-sm">
-                        Select a loan account and click "Preview Statement" to render details.
-                    </div>
-                }
+            <div class="text-7xl mb-5">
+                📊
             </div>
 
-            <div class="mt-6 rounded-xl bg-slate-50 border border-slate-200 p-4">
+            <h2 class="text-3xl font-bold text-slate-800">
+                Loan Statement Export
+            </h2>
 
-                <p class="text-sm text-slate-600">
+            <p class="mt-4 text-center text-slate-500 max-w-xl">
 
-                    This statement is system generated and summarizes all loan
-                    transactions for the selected reporting period.
+                Select a loan account from the left panel.
 
-                </p>
+                Click
 
-            </div>
-            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition">
-                    Export Excel
-                </button>
-                <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition shadow-sm">
-                    Generate PDF Statement
-                </button>
-            </div>
+                <strong>Export Excel Statement</strong>
+
+                to generate a professional Excel workbook containing
+
+                Loan Summary,
+
+                Payment History,
+
+                and
+
+                Repayment Schedule.
+
+            </p>
+
         </div>
 
     </div>

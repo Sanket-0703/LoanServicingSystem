@@ -20,12 +20,69 @@ namespace CoreData.LoanOrigination
         public DateTime? EndDate { get; set; }
         public string Status { get; set; } = "Draft";
         public string? UpdatedBy { get; set; }
+        public Guid? CreatedBy { get; set; }
 
         [Computed]
         public string CustomerName { get; set; } = string.Empty;
 
         [Computed]
         public string ProductName { get; set; } = string.Empty;
+
+        public static async Task<Loan?> GetLoanWorkspaceAsync(IDatabaseConnection databaseConnection, Guid loanId)
+        {
+            try
+            {
+                using var connection = databaseConnection.GetConnection();
+
+                const string sql = @"
+SELECT
+    l.*,
+    c.Name AS CustomerName,
+    p.Name AS ProductName
+FROM dbo.Loans l
+INNER JOIN dbo.Customers c
+    ON l.CustomerId = c.Id
+INNER JOIN dbo.LoanProducts p
+    ON l.ProductId = p.Id
+WHERE l.Id = @LoanId";
+
+                return await connection.QueryFirstOrDefaultAsync<Loan>(
+                    sql,
+                    new
+                    {
+                        LoanId = loanId
+                    });
+            }
+            catch (Exception ex)
+            {
+                // Log the exact SQL error to the server console
+                Console.WriteLine($"Error fetching loan workspace for Loan {loanId}: {ex.Message}");
+
+                // Rethrow the exception so LoadDataAsync catches it and displays it
+                throw;
+            }
+        }
+
+        public static async Task<List<Loan>> GetAllLoansUnderLO(IDatabaseConnection databaseConnection, Guid Id)
+        {
+            using var connection = databaseConnection.GetConnection();
+
+            const string sql = @"
+              SELECT 
+    l.*,
+    c.Name AS CustomerName,
+    p.Name AS ProductName
+FROM [dbo].[Loans] l
+INNER JOIN [dbo].[Customers] c ON l.CustomerId = c.Id
+INNER JOIN [dbo].[LoanProducts] p ON l.ProductId = p.Id
+where l.CreatedBy=@Id
+	or '8CD71F9D-E28A-F111-A099-FD86528A1448'=@Id
+ORDER BY l.LoanNumber DESC
+";
+
+            var result = await connection.QueryAsync<Loan>(sql, new { Id });
+            return result.ToList();
+        }
 
         public static async Task<List<Loan>> GetAllWithDetailsAsync(IDatabaseConnection databaseConnection)
         {

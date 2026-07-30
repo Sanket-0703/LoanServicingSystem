@@ -19,10 +19,21 @@ namespace CoreData.Servicing
 
         public static async Task<List<RepaymentSchedule>> GetByLoanIdAsync(IDatabaseConnection databaseConnection, Guid loanId)
         {
-            using var connection = databaseConnection.GetConnection();
-            const string sql = "SELECT * FROM [dbo].[RepaymentSchedules] WHERE LoanId = @LoanId ORDER BY EmiNo";
-            var result = await connection.QueryAsync<RepaymentSchedule>(sql, new { LoanId = loanId });
-            return result.ToList();
+            try
+            {
+                using var connection = databaseConnection.GetConnection();
+                const string sql = "SELECT * FROM [dbo].[RepaymentSchedules] WHERE LoanId = @LoanId ORDER BY EmiNo";
+                var result = await connection.QueryAsync<RepaymentSchedule>(sql, new { LoanId = loanId });
+                return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                // Log the exact SQL error to the server console
+                Console.WriteLine($"Error fetching repayment schedule for Loan {loanId}: {ex.Message}");
+
+                // Rethrow the exception so LoadDataAsync catches it and displays it
+                throw;
+            }
         }
 
         public class CollectionsData

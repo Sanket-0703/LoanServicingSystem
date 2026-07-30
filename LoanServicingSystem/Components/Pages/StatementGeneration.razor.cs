@@ -1,7 +1,9 @@
 ﻿using CoreData;
+using CoreData.Export;
 using CoreData.LoanOrigination;
 using CoreData.Servicing;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace LoanServicingSystem.Components.Pages
 {
@@ -13,6 +15,8 @@ namespace LoanServicingSystem.Components.Pages
 
         [Inject]
         private IDatabaseConnection? DatabaseConnection { get; set; }
+        [Inject]
+        private IJSRuntime JS { get; set; } = default!;
 
         // =========================================
         // Page State
@@ -30,17 +34,17 @@ namespace LoanServicingSystem.Components.Pages
 
         public Guid SelectedLoanId { get; set; }
 
-        public string StatementType { get; set; } = "Full Account Ledger Statement";
+        public Loan? SelectedLoan { get; set; }
 
-        public DateTime StartDate { get; set; } = DateTime.Today.AddMonths(-6);
+        public int TotalPayments { get; set; }
 
-        public DateTime EndDate { get; set; } = DateTime.Today;
+
 
         // =========================================
         // Generated Statement
         // =========================================
 
-        public StatementDetailsDto? StatementData { get; set; }
+
 
         // =========================================
         // Lifecycle Methods
@@ -56,57 +60,103 @@ namespace LoanServicingSystem.Components.Pages
 
             try
             {
-                if (DatabaseConnection != null)
+                if (DatabaseConnection == null)
+                    return;
+
+                AvailableLoans =
+                    await Loan.GetAllWithDetailsAsync(DatabaseConnection);
+
+                if (AvailableLoans.Any())
                 {
-                    // Load all available loans
-                    AvailableLoans = await Loan.GetAllWithDetailsAsync(DatabaseConnection);
+                    SelectedLoanId = AvailableLoans.First().Id;
 
-                    // Generate preview for the first loan
-                    if (AvailableLoans.Any())
-                    {
-                        SelectedLoanId = AvailableLoans.First().Id;
-
-                        await GeneratePreviewAsync();
-                    }
+                    await LoadLoanAsync();
                 }
             }
             finally
             {
                 IsLoadingLoans = false;
-
-                StateHasChanged();
             }
+        }
+
+        private async Task LoadLoanAsync()
+        {
+            if (DatabaseConnection == null)
+                return;
+
+            SelectedLoan =
+                await Loan.GetLoanWorkspaceAsync(
+                    DatabaseConnection,
+                    SelectedLoanId);
+
+            var payments =
+                await Payment.GetByLoanIdAsync(
+                    DatabaseConnection,
+                    SelectedLoanId);
+
+            TotalPayments = payments.Count;
+
+            StateHasChanged();
+        }
+
+        private async Task OnLoanChanged(ChangeEventArgs e)
+        {
+            SelectedLoanId = Guid.Parse(e.Value!.ToString()!);
+
+            await LoadLoanAsync();
         }
 
         // =========================================
         // Statement Generation
         // =========================================
 
-        /// <summary>
-        /// Generates a statement preview for the
-        /// selected loan and date range.
-        /// </summary>
-        protected async Task GeneratePreviewAsync()
+        private async Task ExportStatement()
         {
-            if (SelectedLoanId == Guid.Empty || DatabaseConnection == null)
+            if (DatabaseConnection == null)
                 return;
 
             IsGenerating = true;
 
             try
             {
-                StatementData = await Statement.GetStatementDataAsync(
-                    DatabaseConnection,
-                    SelectedLoanId,
-                    StartDate,
-                    EndDate);
+                var loan = SelectedLoan;
+
+                if (loan == null)
+                    return;
+
+                if (loan == null)
+                    return;
+
+                var payments =
+                    await Payment.GetByLoanIdAsync(
+                        DatabaseConnection,
+                        SelectedLoanId);
+
+                var schedules =
+                    await RepaymentSchedule.GetByLoanIdAsync(
+                        DatabaseConnection,
+                        SelectedLoanId);
+
+                var workbook =
+                    LoanStatementExporter.GenerateWorkbook(
+                        loan,
+                        payments,
+                        schedules);
+
+                using var stream = new MemoryStream();
+
+                workbook.SaveAs(stream);
+
+                await JS.InvokeVoidAsync(
+                    "downloadFile",
+                    $"LoanStatement_{loan.LoanNumber}.xlsx",
+                    Convert.ToBase64String(stream.ToArray()));
             }
             finally
             {
                 IsGenerating = false;
-
-                StateHasChanged();
             }
         }
+
     }
 }

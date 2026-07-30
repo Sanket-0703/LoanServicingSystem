@@ -1,8 +1,10 @@
 ﻿using CoreData;
+using CoreData.Dashboard.Models;
+using CoreData.Export;
 using CoreData.LoanOrigination;
 using CoreData.Servicing;
-using Dapper;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace LoanServicingSystem.Components.Pages
 {
@@ -14,6 +16,8 @@ namespace LoanServicingSystem.Components.Pages
 
         [Inject]
         private IDatabaseConnection? DatabaseConnection { get; set; }
+        [Inject]
+        public IJSRuntime JS { get; set; } = default!;
 
         // =========================================
         // Route Parameters
@@ -26,7 +30,7 @@ namespace LoanServicingSystem.Components.Pages
         // Page Data
         // =========================================
 
-        public bool IsLoading { get; set; } = true;
+        public bool IsLoading { get; set; } = false;
 
         public string? ErrorMessage { get; set; }
 
@@ -37,6 +41,10 @@ namespace LoanServicingSystem.Components.Pages
         public List<RepaymentSchedule> ScheduleItems { get; set; } = new();
 
         public List<LedgerTransactionItem> LedgerItems { get; set; } = new();
+        public Payment PaymentSummary { get; set; } = new();
+
+        public List<Payment> Payments { get; set; } = new();
+        public List<AuditTrailModel> AuditRecords { get; set; } = new();
 
         // =========================================
         // Summary Metrics
@@ -77,6 +85,7 @@ namespace LoanServicingSystem.Components.Pages
         /// </summary>
         protected override async Task OnInitializedAsync()
         {
+            ErrorMessage = null;
             await LoadDataAsync();
         }
 
@@ -88,68 +97,56 @@ namespace LoanServicingSystem.Components.Pages
         /// Loads the loan, repayment schedule, disbursements,
         /// payments, and computes dashboard metrics.
         /// </summary>
+        // Use OnParametersSetAsync instead of OnInitializedAsync for routed parameters
+        //protected override async Task OnParametersSetAsync()
+        //{
+        //    // Reset state when the ID changes
+        //    //ErrorMessage = null;
+        //    await LoadDataAsync();
+        //}
+
         private async Task LoadDataAsync()
         {
-            IsLoading = true;
+            //IsLoading = true;
+            //ErrorMessage = null;
+
+            // Force the UI to render the "Loading..." message immediately
+
 
             try
             {
                 if (DatabaseConnection != null)
                 {
-                    using var connection = DatabaseConnection.GetConnection();
-
-                    const string loanSql = @"
-                        SELECT
-                            l.*,
-                            c.Name AS CustomerName,
-                            p.Name AS ProductName
-                        FROM [dbo].[Loans] l
-                        INNER JOIN [dbo].[Customers] c ON l.CustomerId = c.Id
-                        INNER JOIN [dbo].[LoanProducts] p ON l.ProductId = p.Id
-                        WHERE l.Id = @Id";
-
-                    CurrentLoan = await connection.QueryFirstOrDefaultAsync<Loan>(
-                        loanSql,
-                        new { Id });
+                    // Removed Task.Run! Safe to execute directly now that Prerendering is off.
+                    CurrentLoan = await Loan.GetLoanWorkspaceAsync(DatabaseConnection, Id);
+                    Console.WriteLine("Loan OK");
 
                     if (CurrentLoan != null)
                     {
-                        ScheduleItems =
-                            await RepaymentSchedule.GetByLoanIdAsync(
-                                DatabaseConnection,
-                                Id);
+                        // Fetch data safely
+                        ScheduleItems = await RepaymentSchedule.GetByLoanIdAsync(DatabaseConnection, Id) ?? new();
+                        Console.WriteLine("Schedule OK");
 
-                        var disbursements =
-                            await Disbursement.GetByLoanIdAsync(
-                                DatabaseConnection,
-                                Id);
+                        var disbursements = await Disbursement.GetByLoanIdAsync(DatabaseConnection, Id) ?? new();
 
-                        var payments =
-                            await Payment.GetByLoanIdAsync(
-                                DatabaseConnection,
-                                Id);
+                        PaymentSummary = await Payment.GetPaymentScreenDataAsync(DatabaseConnection, Id) ?? new();
+                        Console.WriteLine("PaymentSummary OK");
+                        Payments = await Payment.GetByLoanIdAsync(DatabaseConnection, Id) ?? new();
+                        Console.WriteLine("Payments OK");
+                        AuditRecords = await AuditTrailModel.GetByLoanIdAsync(DatabaseConnection, Id) ?? new();
+                        Console.WriteLine("Audit OK");
 
-                        // Calculate summary metrics
+                        // Safe LINQ calculations
+                        PaidCount = ScheduleItems.Count(s => string.Equals(s.Status, "Paid", StringComparison.OrdinalIgnoreCase));
+                        TotalPaid = PaymentSummary.TotalCollected;
 
-                        PaidCount = ScheduleItems.Count(s =>
-                            s.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase));
-
-                        TotalPaid = payments.Sum(p => p.Amount);
-
-                        var nextPending =
-                            ScheduleItems.FirstOrDefault(s =>
-                                !s.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase));
+                        var nextPending = ScheduleItems.FirstOrDefault(s => !string.Equals(s.Status, "Paid", StringComparison.OrdinalIgnoreCase));
 
                         if (nextPending != null)
                         {
-                            NextEmiAmount =
-                                nextPending.Principal + nextPending.Interest;
-
-                            NextEmiDueDate =
-                                nextPending.DueDate;
-
-                            PrincipalBalance =
-                                nextPending.Outstanding + nextPending.Principal;
+                            NextEmiAmount = nextPending.Principal + nextPending.Interest;
+                            NextEmiDueDate = nextPending.DueDate;
+                            PrincipalBalance = nextPending.Outstanding + nextPending.Principal;
                         }
                         else
                         {
@@ -158,76 +155,69 @@ namespace LoanServicingSystem.Components.Pages
 
                         if (PrincipalBalance == 0 && ScheduleItems.Any())
                         {
-                            PrincipalBalance =
-                                ScheduleItems.Last().Outstanding;
+                            PrincipalBalance = ScheduleItems.Last().Outstanding;
                         }
 
-                        BuildLedger(disbursements, payments);
+                        BuildLedger(disbursements, Payments);
                     }
                     else
                     {
-                        ErrorMessage = "Loan account not found.";
+                        ErrorMessage = $"Loan record not found. Requested ID: {Id} | DB State: {DatabaseConnection?.GetConnection().Database}";
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"System Error: {ex.Message}";
+                Console.WriteLine(ex);
             }
             finally
             {
                 IsLoading = false;
-                StateHasChanged();
+                // Update the UI to remove the loading screen and show the data/error
+                //StateHasChanged();
             }
         }
 
-        // =========================================
-        // Data Processing
-        // =========================================
-
-        /// <summary>
-        /// Builds the transaction ledger with running balance.
-        /// </summary>
-        private void BuildLedger(
-            List<Disbursement> disbursements,
-            List<Payment> payments)
+        // Make BuildLedger null-safe just in case
+        private void BuildLedger(List<Disbursement>? disbursements, List<Payment>? payments)
         {
             var rawEvents = new List<LedgerEvent>();
 
-            foreach (var d in disbursements)
+            if (disbursements != null)
             {
-                rawEvents.Add(new LedgerEvent
+                foreach (var d in disbursements)
                 {
-                    Timestamp = d.TransactionDate,
-                    Type = "Principal Disbursement",
-                    Debit = d.Principal,
-                    Credit = null
-                });
+                    rawEvents.Add(new LedgerEvent
+                    {
+                        Timestamp = d.TransactionDate,
+                        Type = "Principal Disbursement",
+                        Debit = d.Principal
+                    });
+                }
             }
 
-            foreach (var p in payments)
+            if (payments != null)
             {
-                rawEvents.Add(new LedgerEvent
+                foreach (var p in payments)
                 {
-                    Timestamp = p.PaymentDate,
-                    Type = string.IsNullOrWhiteSpace(p.PaymentType)
-                        ? "EMI Payment Received"
-                        : p.PaymentType,
-                    Debit = null,
-                    Credit = p.Amount
-                });
+                    rawEvents.Add(new LedgerEvent
+                    {
+                        Timestamp = p.PaymentDate,
+                        Type = string.IsNullOrWhiteSpace(p.PaymentType) ? "EMI Payment Received" : p.PaymentType,
+                        Credit = p.Amount
+                    });
+                }
             }
 
-            var sorted =
-                rawEvents.OrderBy(e => e.Timestamp).ToList();
-
+            var sorted = rawEvents.OrderBy(e => e.Timestamp).ToList();
             decimal runningBalance = 0;
-
             LedgerItems.Clear();
 
             foreach (var ev in sorted)
             {
-                if (ev.Debit.HasValue)
-                    runningBalance += ev.Debit.Value;
-
-                if (ev.Credit.HasValue)
-                    runningBalance -= ev.Credit.Value;
+                if (ev.Debit.HasValue) runningBalance += ev.Debit.Value;
+                if (ev.Credit.HasValue) runningBalance -= ev.Credit.Value;
 
                 LedgerItems.Add(new LedgerTransactionItem
                 {
@@ -239,6 +229,34 @@ namespace LoanServicingSystem.Components.Pages
                 });
             }
         }
+
+        private async Task ExportStatement()
+        {
+            var workbook = LoanStatementExporter.GenerateWorkbook(
+                CurrentLoan!,
+                Payments,
+                ScheduleItems);
+
+            using var stream = new MemoryStream();
+
+            workbook.SaveAs(stream);
+
+            var bytes = stream.ToArray();
+
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                $"LoanStatement_{CurrentLoan!.LoanNumber}.xlsx",
+                Convert.ToBase64String(bytes));
+        }
+
+        // =========================================
+        // Data Processing
+        // =========================================
+
+        /// <summary>
+        /// Builds the transaction ledger with running balance.
+        /// </summary>
+
 
         // =========================================
         // Loan Actions

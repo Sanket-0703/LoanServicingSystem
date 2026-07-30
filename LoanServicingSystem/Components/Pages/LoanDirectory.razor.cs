@@ -1,6 +1,8 @@
 ﻿using CoreData;
+using CoreData.Identity;
 using CoreData.LoanOrigination;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace LoanServicingSystem.Components.Pages
 {
@@ -12,6 +14,8 @@ namespace LoanServicingSystem.Components.Pages
 
         [Inject]
         private IDatabaseConnection? DatabaseConnection { get; set; }
+        [Inject]
+        private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
 
         // =========================================
         // Page Data
@@ -20,6 +24,8 @@ namespace LoanServicingSystem.Components.Pages
         public bool IsLoading { get; set; } = true;
 
         public List<Loan> AllLoans { get; set; } = new();
+
+        public Guid UserId { get; private set; }
 
         public IEnumerable<Loan> FilteredLoans { get; set; } =
             Array.Empty<Loan>();
@@ -93,10 +99,18 @@ namespace LoanServicingSystem.Components.Pages
 
             try
             {
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                if (authState.User.Identity?.IsAuthenticated == true)
+                {
+                    UserId = Users.GetCurrentUserId(authState.User);
+
+
+                }
+
                 if (DatabaseConnection != null)
                 {
-                    AllLoans = await Loan.GetAllWithDetailsAsync(
-                        DatabaseConnection);
+                    AllLoans = await Loan.GetAllLoansUnderLO(
+                        DatabaseConnection, UserId);
 
                     ApplyFilters();
                 }

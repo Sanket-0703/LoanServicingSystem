@@ -190,6 +190,7 @@ namespace LoanServicingSystem.Components.Pages
                     NewLoan.StartDate?.AddMonths(NewLoan.Tenure);
 
                 NewLoan.UpdatedBy = "SystemAdmin";
+                NewLoan.CreatedBy = UserId;
 
                 await Loan.OriginateLoanWithScheduleAsync(
                     DatabaseConnection,

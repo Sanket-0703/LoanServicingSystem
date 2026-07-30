@@ -1,4 +1,4 @@
-﻿@page "/loans/{Id:guid}"
+﻿ @page "/loans/{Id:guid}"
 @layout MainLayout
 @attribute [Authorize]
 @namespace LoanServicingSystem.Components.Pages
@@ -81,50 +81,62 @@ else
 
             <div class="flex flex-wrap justify-end gap-3">
 
+                <CascadingAuthenticationState>
                 @if (CurrentLoan?.Status == "Draft")
                 {
-                    <button class="px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition"
-                            @onclick="ApproveLoan">
+                    <AuthorizeView Roles="Admin">
+                         <Authorized> 
+                            <button class="px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition"
+                                    @onclick="ApproveLoan">
 
-                        ✅ Approve
+                                ✅ Approve
 
-                    </button>
+                            </button>
 
-                    <button class="px-5 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
-                            @onclick="RejectLoan">
+                            <button class="px-5 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
+                                    @onclick="RejectLoan">
 
-                        ❌ Reject
+                                ❌ Reject
 
-                    </button>
+                            </button>
+                         </Authorized> 
+                    </AuthorizeView>
                 }
 
                 @if (CurrentLoan?.Status == "Approved")
                 {
-                    <button class="px-5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition"
-                            @onclick="DisburseLoan">
+                     <AuthorizeView Roles="Admin,LoanOfficer"> 
+                        <Authorized> 
+                            <button class="px-5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                                    @onclick="DisburseLoan">
 
-                        💰 Disburse
+                                💰 Disburse
 
-                    </button>
+                            </button>
+                       </Authorized> 
+                     </AuthorizeView> 
                 }
 
                 @if (CurrentLoan?.Status == "Disbursed")
                 {
-                    <a href="/loans/@CurrentLoan?.Id/payment"
-                       class="px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition">
+                     <AuthorizeView Roles="Admin,LoanOfficer"> 
+                        <Authorized> 
+                            <a href="/loans/@CurrentLoan?.Id/payment"
+                               class="px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition">
 
-                        💳 Record Payment
+                                💳 Record Payment
 
-                    </a>
+                            </a>
+                                <button @onclick="ExportStatement"
+                                        class="px-5 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition">
 
-                    <a href="/statements/@CurrentLoan?.Id"
-                       class="px-5 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition">
+                                    📄 Statement
 
-                        📄 Statement
-
-                    </a>
+                                </button>
+                         </Authorized> 
+                    </AuthorizeView> 
                 }
-
+                </CascadingAuthenticationState>
             </div>
 
         </div>
@@ -298,28 +310,33 @@ else
     <!-- Tab Navigation -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="border-b border-slate-200 px-6 flex gap-8">
-            <button @onclick='() => ActiveTab = "overview"'
-                    class="px-5 py-3 border-b-2 @(ActiveTab=="overview" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+            <button type="button"
+                    @onclick='() => ActiveTab = "overview"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab == "overview" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
                 Overview
             </button>
 
-            <button @onclick='() => ActiveTab = "schedule"'
-                    class="px-5 py-3 border-b-2 @(ActiveTab=="schedule" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+            <button type="button"
+                    @onclick='() => ActiveTab = "schedule"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab == "schedule" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
                 Repayment Schedule
             </button>
 
-            <button @onclick='() => ActiveTab = "payments"'
-                    class="px-5 py-3 border-b-2 @(ActiveTab=="payments" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+            <button type="button"
+                    @onclick='() => ActiveTab = "payments"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab == "payments" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
                 Payments
             </button>
 
-            <button @onclick='() => ActiveTab = "audit"'
-                    class="px-5 py-3 border-b-2 @(ActiveTab=="audit" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+            <button type="button"
+                    @onclick='() => ActiveTab = "audit"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab == "audit" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
                 Audit Trail
             </button>
 
-            <button @onclick='() => ActiveTab = "ledger"'
-                    class="px-5 py-3 border-b-2 @(ActiveTab=="ledger" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
+            <button type="button"
+                    @onclick='() => ActiveTab = "ledger"'
+                    class="px-5 py-3 border-b-2 @(ActiveTab == "ledger" ? "border-indigo-600 text-indigo-600 font-semibold" : "border-transparent text-slate-500 hover:text-slate-700")">
                 Ledger
             </button>
         </div>
@@ -599,7 +616,7 @@ else
                         </thead>
                         <tbody class="divide-y divide-slate-200">
 
-                            @foreach (var item in ScheduleItems)
+                            @foreach (var item in ScheduleItems ?? new())
                             {
                                 var emi = item.Principal + item.Interest;
 
@@ -728,7 +745,7 @@ else
                         </thead>
                         <tbody class="divide-y divide-slate-200">
 
-                            @foreach (var item in LedgerItems)
+                            @foreach (var item in LedgerItems ?? new())
                             {
                                 <tr class="hover:bg-slate-50 transition">
 
@@ -822,42 +839,479 @@ else
             }
             else if (ActiveTab == "payments")
             {
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
 
-                    <div class="text-5xl mb-4">
-                        💳
+                <div class="space-y-6">
+                    <!-- Payment Summary -->
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+                        <StatCard Title="Total Collected"
+                                  Value="@(PaymentSummary?.TotalCollected.ToString("C") ?? "$0.00")"
+                                  SubTitle="Amount Received"
+                                  IsLoading="@IsLoading"
+                                  ValueColor="text-emerald-600"
+                                  IconBackground="bg-emerald-100"
+                                  IconColor="text-emerald-600">
+                            <Icon>💰</Icon>
+                        </StatCard>
+
+                        <StatCard Title="Current Due"
+                                  Value="@(PaymentSummary?.CurrentDueAmount.ToString("C") ?? "$0.00")"
+                                  SubTitle="Next EMI"
+                                  IsLoading="@IsLoading"
+                                  ValueColor="text-red-600"
+                                  IconBackground="bg-red-100"
+                                  IconColor="text-red-600">
+                            <Icon>📅</Icon>
+                        </StatCard>
+
+                        <StatCard Title="Payments"
+                                  Value="@PaymentSummary?.TotalPayments.ToString()"
+                                  SubTitle="Transactions"
+                                  IsLoading="@IsLoading"
+                                  ValueColor="text-indigo-600"
+                                  IconBackground="bg-indigo-100"
+                                  IconColor="text-indigo-600">
+                            <Icon>💳</Icon>
+                        </StatCard>
+
+                        <StatCard Title="Last Payment"
+                                  Value="@(PaymentSummary.LastPaymentDate?.ToString("dd MMM yyyy") ?? "-")"
+                                  SubTitle="Most Recent"
+                                  IsLoading="@IsLoading"
+                                  ValueColor="text-amber-600"
+                                  IconBackground="bg-amber-100"
+                                  IconColor="text-amber-600">
+                            <Icon>🗓️</Icon>
+                        </StatCard>
                     </div>
 
-                    <h3 class="text-xl font-semibold text-slate-800">
-                        Payment History
-                    </h3>
+                    <!-- Payment History -->
 
-                    <p class="text-slate-500 mt-2">
-                        Payment history will be shown here after recording EMI payments.
-                    </p>
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+                        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+
+                            <div>
+
+                                <h3 class="text-lg font-semibold text-slate-800">
+                                    Payment History
+                                </h3>
+
+                                <p class="text-sm text-slate-500 mt-1">
+                                    Complete payment transactions for this loan.
+                                </p>
+
+                            </div>
+
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-medium">
+                                @(Payments?.Count ?? 0) Transaction(s)
+                            </span>
+
+                        </div>
+
+                        @if (Payments != null && Payments.Any())
+                        {
+                            <div class="overflow-x-auto">
+
+                                <table class="min-w-full divide-y divide-slate-200 text-sm">
+
+                                    <thead class="bg-slate-50">
+
+                                        <tr>
+
+                                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                                Payment Date
+                                            </th>
+
+                                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                                Type
+                                            </th>
+
+                                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                                Amount
+                                            </th>
+
+                                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                                Mode
+                                            </th>
+
+                                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                                Reference
+                                            </th>
+
+                                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                                Remarks
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody class="divide-y divide-slate-200 bg-white">
+
+                                        @foreach (var payment in (Payments ?? new()).OrderByDescending(x => x.PaymentDate))
+                                        {
+                                            <tr class="hover:bg-slate-50 transition">
+
+                                                <td class="px-6 py-4 whitespace-nowrap">
+
+                                                    @payment.PaymentDate.ToString("dd MMM yyyy")
+
+                                                </td>
+
+                                                <td class="px-6 py-4">
+
+                                                    @if (!string.IsNullOrWhiteSpace(payment.PaymentType))
+                                                    {
+                                                        <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
+                                                            @payment.PaymentType
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                                                            EMI
+                                                        </span>
+                                                    }
+
+                                                </td>
+
+                                                <td class="px-6 py-4">
+
+                                                    <span class="font-bold text-emerald-600">
+                                                        @payment.Amount.ToString("C")
+                                                    </span>
+
+                                                </td>
+
+                                                <td class="px-6 py-4">
+                                                    @switch (payment.Mode?.ToUpper())
+                                                    {
+                                                        case "CASH":
+                                                            <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                                                                💵 Cash
+                                                            </span>
+                                                            break;
+
+                                                        case "UPI":
+                                                            <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">
+                                                                📱 UPI
+                                                            </span>
+                                                            break;
+
+                                                        case "NEFT":
+                                                            <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                                                                🏦 NEFT
+                                                            </span>
+                                                            break;
+
+                                                        case "RTGS":
+                                                            <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
+                                                                🏛️ RTGS
+                                                            </span>
+                                                            break;
+
+                                                        case "CHEQUE":
+                                                            <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                                                                📄 Cheque
+                                                            </span>
+                                                            break;
+
+                                                        default:
+                                                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                                                                @(string.IsNullOrWhiteSpace(payment.Mode) ? "-" : payment.Mode)
+                                                            </span>
+                                                            break;
+                                                    }
+
+                                                </td>
+
+                                                <td class="px-6 py-4">
+
+                                                    @if (!string.IsNullOrWhiteSpace(payment.ReferenceNumber))
+                                                    {
+                                                        <span class="font-mono text-xs text-slate-700">
+                                                            @payment.ReferenceNumber
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-slate-400">
+                                                            -
+                                                        </span>
+                                                    }
+
+                                                </td>
+
+                                                <td class="px-6 py-4">
+
+                                                    @if (!string.IsNullOrWhiteSpace(payment.Remarks))
+                                                    {
+                                                        <span class="text-slate-700">
+                                                            @payment.Remarks
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-slate-400">
+                                                            -
+                                                        </span>
+                                                    }
+
+                                                </td>
+
+                                            </tr>
+                                        }
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="p-12 text-center">
+
+                                <div class="text-5xl mb-4">
+                                    💳
+                                </div>
+
+                                <h3 class="text-xl font-semibold text-slate-800">
+                                    No Payments Recorded
+                                </h3>
+
+                                <p class="text-slate-500 mt-2">
+                                    No payment transactions have been recorded for this loan.
+                                </p>
+
+                                @if (CurrentLoan?.Status == "Disbursed")
+                                {
+                                    <div class="mt-6">
+
+                                        <a href="/loans/@CurrentLoan.Id/payment"
+                                           class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition">
+
+                                            💳 Record First Payment
+
+                                        </a>
+
+                                    </div>
+                                }
+
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+       
+            }
+            else if (ActiveTab == "audit")
+            {
+                <div class="space-y-6">
+
+                    <!-- Audit Summary -->
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+                        <StatCard Title="Total Changes"
+                                  Value="@AuditRecords.Count.ToString()"
+                                  SubTitle="Audit Entries"
+                                  IsLoading="@IsLoading"
+                                  ValueColor="text-indigo-600"
+                                  IconBackground="bg-indigo-100"
+                                  IconColor="text-indigo-600">
+                            <Icon>📋</Icon>
+                        </StatCard>
+
+                        <StatCard Title="Today's Changes"
+                                  Value="@AuditRecords.Count(x => x.ChangedOn.Date == DateTime.Today).ToString()"
+                                  SubTitle="Updated Today"
+                                  IsLoading="@IsLoading"
+                                  ValueColor="text-emerald-600"
+                                  IconBackground="bg-emerald-100"
+                                  IconColor="text-emerald-600">
+                            <Icon>📅</Icon>
+                        </StatCard>
+
+                        <StatCard Title="Last Updated By"
+                                  Value="@(AuditRecords.FirstOrDefault()?.ChangedBy ?? "-")"
+                                  SubTitle="Most Recent User"
+                                  IsLoading="@IsLoading"
+                                  ValueColor="text-amber-600"
+                                  IconBackground="bg-amber-100"
+                                  IconColor="text-amber-600">
+                            <Icon>👤</Icon>
+                        </StatCard>
+
+                        <StatCard Title="Latest Change"
+                                  Value="@(AuditRecords.FirstOrDefault()?.ChangedOn.ToString("dd MMM yyyy") ?? "-")"
+                                  SubTitle="Last Activity"
+                                  IsLoading="@IsLoading"
+                                  ValueColor="text-purple-600"
+                                  IconBackground="bg-purple-100"
+                                  IconColor="text-purple-600">
+                            <Icon>🕒</Icon>
+                        </StatCard>
+
+                    </div>
+
+                    <!-- Audit History -->
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+
+                        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+
+                            <div>
+
+                                <h3 class="text-lg font-semibold text-slate-800">
+                                    Loan Audit History
+                                </h3>
+
+                                <p class="text-sm text-slate-500 mt-1">
+                                    Complete history of changes made to this loan.
+                                </p>
+
+                            </div>
+
+                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-medium">
+                                @AuditRecords.Count Record(s)
+                            </span>
+
+                        </div>
+
+                        @if (AuditRecords.Any())
+                        {
+                            <div class="overflow-x-auto">
+
+                                <table class="min-w-full divide-y divide-slate-200 text-sm">
+
+                                    <thead class="bg-slate-50">
+
+                                        <tr>
+
+                                            <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+                                                Date
+                                            </th>
+
+                                            <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+                                                Module
+                                            </th>
+
+                                            <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+                                                Action
+                                            </th>
+
+                                            <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+                                                Record
+                                            </th>
+
+                                            <th class="px-6 py-3 text-left text-xs uppercase font-semibold text-slate-500">
+                                                Updated By
+                                            </th>
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody class="divide-y divide-slate-200">
+
+                                        @foreach (var audit in AuditRecords)
+                                        {
+                                            <tr class="hover:bg-slate-50 transition">
+
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    @audit.ChangedOn.ToString("dd MMM yyyy HH:mm")
+                                                </td>
+
+                                                <td class="px-6 py-4">
+                                                    <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                                                        @audit.Module
+                                                    </span>
+                                                </td>
+
+                                                <td class="px-6 py-4">
+
+                                                    @if (audit.ChangeType == "INSERT")
+                                                    {
+                                                        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                                                            ➕ Insert
+                                                        </span>
+                                                    }
+                                                    else if (audit.ChangeType == "UPDATE")
+                                                    {
+                                                        <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                                                            ✏️ Update
+                                                        </span>
+                                                    }
+                                                    else if (audit.ChangeType == "DELETE")
+                                                    {
+                                                        <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+                                                            🗑 Delete
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                                                            @audit.ChangeType
+                                                        </span>
+                                                    }
+
+                                                </td>
+
+                                                <td class="px-6 py-4">
+
+                                                    <div class="font-medium text-slate-800">
+                                                        @audit.RecordNumber
+                                                    </div>
+
+                                                    <div class="text-xs text-slate-500">
+                                                        @audit.RecordId
+                                                    </div>
+
+                                                </td>
+
+                                                <td class="px-6 py-4">
+                                                    @audit.ChangedBy
+                                                </td>
+
+                                            </tr>
+                                        }
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="p-12 text-center">
+
+                                <div class="text-5xl mb-4">
+                                    📋
+                                </div>
+
+                                <h3 class="text-xl font-semibold text-slate-800">
+                                    No Audit Records
+                                </h3>
+
+                                <p class="text-slate-500 mt-2">
+                                    No audit history is available for this loan.
+                                </p>
+
+                            </div>
+                        }
+
+                    </div>
 
                 </div>
             }
-            else if (ActiveTab == "audit")
-{
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
-
-        <div class="text-5xl mb-4">
-            📋
         </div>
 
-        <h3 class="text-xl font-semibold text-slate-800">
-            Audit Trail
-        </h3>
+</div>
 
-        <p class="text-slate-500 mt-2">
-            Complete history of loan lifecycle changes will be displayed here.
-        </p>
-
-    </div>
-}
-        </div>
-    </div>
 }
 
 
@@ -1045,4 +1499,4 @@ else
         </div>
 
     </div>
-}
+} 

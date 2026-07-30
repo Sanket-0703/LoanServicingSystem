@@ -51,6 +51,12 @@ namespace Loan_Servicing_System
             // Application Services
             // =========================================
 
+            builder.Services.AddServerSideBlazor()
+    .AddCircuitOptions(options =>
+    {
+        options.DetailedErrors = true;
+    });
+
             builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 
             builder.Services.AddTransient<IDatabaseConnection>(_ =>
