@@ -107,8 +107,8 @@ namespace LoanServicingSystem.Components.Pages
 
         private async Task LoadDataAsync()
         {
-            //IsLoading = true;
-            //ErrorMessage = null;
+            IsLoading = true;
+            ErrorMessage = null;
 
             // Force the UI to render the "Loading..." message immediately
 
